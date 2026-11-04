@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { venueOptions, type MatchVenue } from "@/features/matches/labels";
-import { formatPositions, positionOptions, type PlayerPosition } from "@/features/players/labels";
+import { formatPositions, positionChoices, type PlayerPosition } from "@/features/players/labels";
 import { tagOptions, type ExerciseTag } from "@/features/exercises/labels";
 import { formatDayShort } from "@/lib/dates";
 import { QuickObservation } from "@/features/observations/components/quick-observation";
@@ -288,7 +288,7 @@ export function Playground() {
           <Label>Posições</Label>
           <ChipGroup
             aria-label="Posições"
-            options={positionOptions}
+            options={positionChoices()}
             value={positions}
             onChange={setPositions}
           />

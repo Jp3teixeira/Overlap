@@ -4,6 +4,7 @@ import { uuid } from "@/lib/schema-helpers";
 import { createClient } from "@/lib/supabase/server";
 import { signMediaUrls } from "@/lib/storage";
 import { getCurrentTeam } from "@/lib/team";
+import { sortPlayersByPosition } from "./grouping";
 import type { PlayerListItem, PlayerOption, PlayerRow } from "./types";
 
 // Leituras do plantel. Ler cookies ⇒ chamar só dentro de um <Suspense>.
@@ -41,9 +42,9 @@ export async function listPlayers(): Promise<PlayerListItem[]> {
 /** Só os ativos, no formato mínimo para escolher um jogador. Não assina fotos. */
 export async function listPlayerOptions(): Promise<PlayerOption[]> {
   const rows = await fetchPlayers();
-  return rows
-    .filter((p) => p.is_active)
-    .map(({ id, name, shirt_number }) => ({ id, name, shirt_number }));
+  return sortPlayersByPosition(rows.filter((p) => p.is_active)).map(
+    ({ id, name, shirt_number }) => ({ id, name, shirt_number }),
+  );
 }
 
 /** Ficha de um jogador. Id inválido, de outra equipa ou inexistente → 404. */

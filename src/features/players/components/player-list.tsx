@@ -7,6 +7,7 @@ import { GroupedList, ListRow } from "@/components/grouped-list";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { groupPlayers } from "../grouping";
 import { formatPositions } from "../labels";
 import type { PlayerListItem } from "../types";
 import { PlayerSheet } from "./player-sheet";
@@ -75,19 +76,33 @@ export function PlayerList({ players, canEdit }: { players: PlayerListItem[]; ca
           }
         />
       ) : (
-        <GroupedList>
-          {visible.map((p) => (
-            <ListRow
-              key={p.id}
-              href={`/plantel/${p.id}`}
-              leading={
-                <PlayerAvatar name={p.name} shirtNumber={p.shirt_number} photoUrl={p.photo_url} />
-              }
-              title={p.name}
-              meta={formatPositions(p.positions) || "Sem posição definida"}
-            />
+        <div className="flex flex-col gap-5">
+          {groupPlayers(visible).map((group) => (
+            <section key={group.key} aria-label={group.label}>
+              <h2 className="text-muted-foreground mb-1.5 px-1 text-[13px] font-semibold tracking-wide uppercase">
+                {group.label}
+                <span className="ml-1.5 font-normal tabular-nums">{group.players.length}</span>
+              </h2>
+              <GroupedList>
+                {group.players.map((p) => (
+                  <ListRow
+                    key={p.id}
+                    href={`/plantel/${p.id}`}
+                    leading={
+                      <PlayerAvatar
+                        name={p.name}
+                        shirtNumber={p.shirt_number}
+                        photoUrl={p.photo_url}
+                      />
+                    }
+                    title={p.name}
+                    meta={formatPositions(p.positions) || "Sem posição definida"}
+                  />
+                ))}
+              </GroupedList>
+            </section>
           ))}
-        </GroupedList>
+        </div>
       )}
 
       {archivedCount > 0 && (

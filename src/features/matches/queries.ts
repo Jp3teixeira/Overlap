@@ -86,3 +86,40 @@ export async function listMatchObservations(matchId: string): Promise<MatchObser
     playerName: playerNames.get(r.player_id) ?? "Jogador",
   }));
 }
+
+/** Para o Início: o próximo jogo (hoje conta) e o último com resultado. */
+export async function getHomeMatches(today: string): Promise<{
+  next: MatchListItem | null;
+  last: MatchListItem | null;
+}> {
+  const team = await getCurrentTeam();
+  const supabase = await createClient();
+
+  const [next, last] = await Promise.all([
+    supabase
+      .from("matches")
+      .select(LIST_COLUMNS)
+      .eq("team_id", team.id)
+      .gte("match_date", today)
+      .is("goals_for", null)
+      .order("match_date", { ascending: true })
+      .order("kickoff_time", { ascending: true, nullsFirst: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("matches")
+      .select(LIST_COLUMNS)
+      .eq("team_id", team.id)
+      .not("goals_for", "is", null)
+      .order("match_date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  if (next.error) throw new Error(`getHomeMatches/next: ${next.error.message}`);
+  if (last.error) throw new Error(`getHomeMatches/last: ${last.error.message}`);
+
+  return {
+    next: (next.data as MatchListItem | null) ?? null,
+    last: (last.data as MatchListItem | null) ?? null,
+  };
+}

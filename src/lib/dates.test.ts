@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { addDays, formatDayLong, formatDayShort, formatTime, seasonOf, todayISO } from "./dates";
+import {
+  addDays,
+  daysBetween,
+  formatCountdown,
+  formatDayLong,
+  formatDayShort,
+  formatTime,
+  seasonOf,
+  todayISO,
+} from "./dates";
 
 describe("dates", () => {
   it("formatDayShort em pt-PT sem pontos", () => {
@@ -32,5 +41,17 @@ describe("dates", () => {
     expect(addDays("2026-11-28", 7)).toBe("2026-12-05");
     expect(addDays("2026-12-28", 7)).toBe("2027-01-04");
     expect(addDays("2026-03-01", -1)).toBe("2026-02-28");
+  });
+
+  it("daysBetween e formatCountdown", () => {
+    expect(daysBetween("2026-11-04", "2026-11-08")).toBe(4);
+    expect(daysBetween("2026-11-04", "2026-10-30")).toBe(-5);
+    expect(formatCountdown("2026-11-04", "2026-11-04")).toBe("Hoje");
+    expect(formatCountdown("2026-11-04", "2026-11-05")).toBe("Amanhã");
+    expect(formatCountdown("2026-11-04", "2026-11-09")).toBe("Daqui a 5 dias");
+    expect(formatCountdown("2026-11-04", "2026-11-03")).toBe("Ontem");
+    expect(formatCountdown("2026-11-04", "2026-11-01")).toBe("Há 3 dias");
+    // passa a mudança de hora (fim de outubro) sem erros de arredondamento
+    expect(daysBetween("2026-10-24", "2026-10-31")).toBe(7);
   });
 });

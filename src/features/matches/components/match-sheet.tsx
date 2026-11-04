@@ -134,7 +134,6 @@ export function MatchSheet({ open, onOpenChange, today, match }: MatchSheetProps
             onChange={(e) => set("opponent", e.target.value)}
             placeholder="Nome da equipa"
             autoComplete="off"
-            autoFocus={!isEdit}
             aria-invalid={errors.opponent ? true : undefined}
           />
         </Field>

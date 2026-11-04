@@ -13,13 +13,20 @@ import { runAction } from "@/lib/run-action";
 import { createMatches } from "../actions";
 import { kindOptions, venueOptions, type MatchKind, type MatchVenue } from "../labels";
 
-type Row = { key: number; match_date: string; opponent: string; venue: MatchVenue };
+type Row = {
+  key: number;
+  match_date: string;
+  kickoff_time: string;
+  opponent: string;
+  venue: MatchVenue;
+};
 
-/** A jornada seguinte vem preenchida: uma semana depois, com o local trocado. */
+/** A jornada seguinte vem preenchida: uma semana depois, à mesma hora, com o local trocado. */
 function nextRow(prev: Row | undefined, today: string, key: number): Row {
   return {
     key,
     match_date: prev ? addDays(prev.match_date, 7) : today,
+    kickoff_time: prev?.kickoff_time ?? "",
     opponent: "",
     venue: prev ? (prev.venue === "casa" ? "fora" : "casa") : "casa",
   };
@@ -74,6 +81,7 @@ export function BulkMatchesSheet({
         createMatches(
           filled.map((r) => ({
             match_date: r.match_date,
+            kickoff_time: r.kickoff_time,
             opponent: r.opponent,
             venue: r.venue,
             kind,
@@ -94,7 +102,7 @@ export function BulkMatchesSheet({
       open={open}
       onOpenChange={onOpenChange}
       title="Adicionar vários jogos"
-      description="Uma linha por jornada. A data e o local da seguinte vêm preenchidos."
+      description="Uma linha por jornada. A data, a hora e o local da seguinte vêm preenchidos."
       footer={
         <Button onClick={save} disabled={pending}>
           {pending ? "A guardar…" : "Guardar todos"}
@@ -151,13 +159,19 @@ export function BulkMatchesSheet({
                     onChange={(e) => update(r.key, { match_date: e.target.value })}
                     aria-label={`Data do jogo ${i + 1}`}
                   />
-                  <Segmented
-                    aria-label={`Local do jogo ${i + 1}`}
-                    options={venueOptions.filter((o) => o.value !== "neutro")}
-                    value={r.venue}
-                    onChange={(v) => update(r.key, { venue: v })}
+                  <Input
+                    type="time"
+                    value={r.kickoff_time}
+                    onChange={(e) => update(r.key, { kickoff_time: e.target.value })}
+                    aria-label={`Hora do jogo ${i + 1}`}
                   />
                 </div>
+                <Segmented
+                  aria-label={`Local do jogo ${i + 1}`}
+                  options={venueOptions}
+                  value={r.venue}
+                  onChange={(v) => update(r.key, { venue: v })}
+                />
               </div>
             </li>
           ))}

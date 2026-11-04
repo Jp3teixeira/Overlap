@@ -110,6 +110,19 @@ describe("matchSchema", () => {
       matchBulkSchema.parse([{ match_date: "2026-11-15", opponent: "UD Beiriz", venue: "fora" }]),
     ).toHaveLength(1);
   });
+  it("adicionar vários: aceita hora por linha (vazia = sem hora)", () => {
+    const rows = matchBulkSchema.parse([
+      { match_date: "2026-11-15", opponent: "UD Beiriz", kickoff_time: "10:30" },
+      { match_date: "2026-11-22", opponent: "FC Infesta", kickoff_time: "" },
+    ]);
+    expect(rows[0].kickoff_time).toBe("10:30");
+    expect(rows[1].kickoff_time).toBeNull();
+    expect(
+      matchBulkSchema.safeParse([
+        { match_date: "2026-11-15", opponent: "X", kickoff_time: "25:00" },
+      ]).success,
+    ).toBe(false);
+  });
   it("resultado exige os dois golos; análise aceita campos vazios", () => {
     expect(matchResultSchema.safeParse({ goals_for: "3" }).success).toBe(false);
     expect(matchResultSchema.parse({ goals_for: "3", goals_against: "1" })).toEqual({
