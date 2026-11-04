@@ -171,3 +171,19 @@ describe("training schemas", () => {
     expect(reorderSchema.safeParse({ session_id: id, item_ids: [] }).success).toBe(false);
   });
 });
+
+describe("loginSchema", () => {
+  it("normaliza o email e explica o que falta", async () => {
+    const { loginSchema } = await import("./auth/schemas");
+    expect(loginSchema.parse({ email: " Treinador@Exemplo.PT ", password: "x" }).email).toBe(
+      "treinador@exemplo.pt",
+    );
+    const r = loginSchema.safeParse({ email: "", password: "" });
+    expect(r.success).toBe(false);
+    if (!r.success) {
+      const msgs = r.error.issues.map((i) => i.message);
+      expect(msgs).toContain("Escreve o email.");
+      expect(msgs).toContain("Escreve a password.");
+    }
+  });
+});

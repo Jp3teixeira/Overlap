@@ -102,6 +102,8 @@ type ActionResult<T = void> =
 
 Os erros esperados não fazem `throw` para o cliente. A mensagem de erro é em PT-PT e diz como resolver.
 
+**Páginas (cacheComponents).** O shell da página é estático. Os dados vêm de um componente `async` dentro de `<Suspense>` (com um skeleton), que chama `getCurrentTeam()` e depois as queries. Nunca ler sessão/cookies no topo de um layout.
+
 **Equipa.** O `getCurrentTeam()` devolve `{ id, name, role, displayName }`. Todos os inserts levam `team_id`. Se o utilizador não tiver equipa, vê a página "Sem acesso".
 
 **Segurança.**

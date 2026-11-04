@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, CalendarDays, ClipboardList, House, Users } from "lucide-react";
+import { BookOpen, CalendarDays, ClipboardList, House, LogOut, Users } from "lucide-react";
+import { signOut } from "@/features/auth/actions";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -51,6 +52,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+        <form action={signOut} className="mt-auto">
+          <button
+            type="submit"
+            className="text-sidebar-foreground/70 flex h-11 w-full items-center gap-3 rounded-lg px-3 text-[15px] font-medium hover:bg-white/5 hover:text-white"
+          >
+            <LogOut className="size-5" strokeWidth={1.75} />
+            Terminar sessão
+          </button>
+        </form>
       </aside>
 
       <main className="mx-auto w-full max-w-[720px] px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+5.5rem)] lg:px-8 lg:pt-10 lg:pb-12">

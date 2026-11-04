@@ -3,6 +3,7 @@ import { CalendarDays, ClipboardList, MessageSquarePlus } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { SectionTitle } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { signOut } from "@/features/auth/actions";
 
 // Início: próximo treino, próximo jogo, último resultado e 3 atalhos. Nada mais (F6.1).
 export default function HomePage() {
@@ -10,6 +11,11 @@ export default function HomePage() {
     <>
       <header className="mb-6 flex items-center justify-between">
         <h1 className="text-[26px] leading-[30px] font-[650] tracking-tight lg:hidden">Overlap</h1>
+        <form action={signOut} className="lg:hidden">
+          <Button type="submit" variant="ghost" size="sm" className="text-muted-foreground">
+            Sair
+          </Button>
+        </form>
         <h1 className="hidden text-[26px] leading-[30px] font-[650] tracking-tight lg:block">
           Início
         </h1>
