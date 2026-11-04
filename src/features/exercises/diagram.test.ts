@@ -70,8 +70,20 @@ describe("helpers do desenho", () => {
     expect(isDiagramEmpty(base())).toBe(false);
   });
 
-  it("formationLabel só aparece com as duas equipas", () => {
+  it("formationLabel só aparece com pelo menos duas equipas", () => {
     expect(formationLabel(base())).toBe("2 vs 1 + 1");
+    const three = {
+      ...base(),
+      pieces: [
+        { id: "1", kind: "a" as const, x: 1, y: 1 },
+        { id: "2", kind: "a" as const, x: 1, y: 1 },
+        { id: "3", kind: "b" as const, x: 1, y: 1 },
+        { id: "4", kind: "c" as const, x: 1, y: 1 },
+        { id: "5", kind: "c" as const, x: 1, y: 1 },
+      ],
+    };
+    expect(formationLabel(three)).toBe("2 vs 1 vs 2");
+    expect(formationLabel({ ...three, pieces: three.pieces.slice(0, 2) })).toBeNull();
     expect(formationLabel(emptyDiagram("campo"))).toBeNull();
     expect(formationLabel(null)).toBeNull();
   });
@@ -108,5 +120,38 @@ describe("arrowGeometry", () => {
   it("a condução é uma linha ondulada (muitos pontos)", () => {
     const g = arrowGeometry({ kind: "dribble", x1: 0, y1: 0, x2: 100, y2: 0 }, 1)!;
     expect(g.line.split("L").length).toBeGreaterThan(20);
+  });
+});
+
+describe("peças e setas novas", () => {
+  it("aceita equipa C, treinador, sinalizador, estaca, remate e linha", () => {
+    const d = {
+      ...emptyDiagram("campo"),
+      pieces: (["c", "coach", "disc", "pole"] as const).map((kind, i) => ({
+        id: `p${i}`,
+        kind,
+        x: 10,
+        y: 10,
+      })),
+      arrows: (["shot", "line"] as const).map((kind, i) => ({
+        id: `a${i}`,
+        kind,
+        x1: 0,
+        y1: 0,
+        x2: 100,
+        y2: 0,
+      })),
+    };
+    expect(diagramSchema.safeParse(d).success).toBe(true);
+  });
+
+  it("a linha não tem ponta; o remate tem a ponta maior que o passe", () => {
+    const pass = arrowGeometry({ kind: "pass", x1: 0, y1: 0, x2: 100, y2: 0 }, 1)!;
+    const shot = arrowGeometry({ kind: "shot", x1: 0, y1: 0, x2: 100, y2: 0 }, 1)!;
+    const line = arrowGeometry({ kind: "line", x1: 0, y1: 0, x2: 100, y2: 0 }, 1)!;
+    expect(line.head).toBe("");
+    expect(line.line).toBe("M0 0 L100 0");
+    const halfWidth = (head: string) => Math.abs(Number(head.split(" ")[1].split(",")[1]));
+    expect(halfWidth(shot.head)).toBeGreaterThan(halfWidth(pass.head));
   });
 });

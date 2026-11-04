@@ -23,18 +23,34 @@ export const FIELD_LABEL: Record<FieldType, string> = {
 /** Raio de um jogador, escolhido para ter ~10 px num telemóvel em qualquer tipo de campo. */
 export const PIECE_RADIUS: Record<FieldType, number> = { campo: 16, meio: 9, quadrado: 11 };
 
-export const PIECE_KINDS = ["a", "b", "n", "gk", "cone", "goal", "ball"] as const;
+export const PIECE_KINDS = [
+  "a",
+  "b",
+  "c",
+  "n",
+  "gk",
+  "coach",
+  "cone",
+  "disc",
+  "pole",
+  "goal",
+  "ball",
+] as const;
 export type PieceKind = (typeof PIECE_KINDS)[number];
 
-export const ARROW_KINDS = ["pass", "run", "dribble"] as const;
+export const ARROW_KINDS = ["pass", "run", "dribble", "shot", "line"] as const;
 export type ArrowKind = (typeof ARROW_KINDS)[number];
 
 export const PIECE_LABEL: Record<PieceKind, string> = {
   a: "Equipa A",
   b: "Equipa B",
+  c: "Equipa C",
   n: "Neutro",
   gk: "GR",
+  coach: "Treinador",
   cone: "Cone",
+  disc: "Sinalizador",
+  pole: "Estaca",
   goal: "Baliza",
   ball: "Bola",
 };
@@ -43,15 +59,21 @@ export const ARROW_LABEL: Record<ArrowKind, string> = {
   pass: "Passe",
   run: "Desmarcação",
   dribble: "Condução",
+  shot: "Remate",
+  line: "Linha",
 };
 
 // Cores da ilustração (o campo é um desenho, não faz parte dos tokens da interface).
 export const PIECE_FILL: Record<PieceKind, string> = {
   a: "#2f7be5",
   b: "#f08a24",
+  c: "#e5484d",
   n: "#f2cf3a",
   gk: "#111827",
+  coach: "#1e3a8a",
   cone: "#f59e0b",
+  disc: "#ef6c3b",
+  pole: "#111827",
   goal: "#ffffff",
   ball: "#ffffff",
 };
@@ -131,15 +153,14 @@ export function changeField(d: Diagram, field: FieldType): Diagram {
   };
 }
 
-/** "3 vs 3" (ou "3 vs 3 + 2" com neutros) quando há as duas equipas; senão null. */
+/** "3 vs 3", "3 vs 3 vs 3" ou "3 vs 3 + 2" (neutros) quando há pelo menos duas equipas; senão null. */
 export function formationLabel(d: Diagram | null): string | null {
   if (!d) return null;
   const count = (k: PieceKind) => d.pieces.filter((p) => p.kind === k).length;
-  const a = count("a");
-  const b = count("b");
+  const teams = [count("a"), count("b"), count("c")].filter((n) => n > 0);
+  if (teams.length < 2) return null;
   const n = count("n");
-  if (a === 0 || b === 0) return null;
-  return `${a} vs ${b}${n > 0 ? ` + ${n}` : ""}`;
+  return `${teams.join(" vs ")}${n > 0 ? ` + ${n}` : ""}`;
 }
 
 /** O que existe no desenho, para a legenda da vista de leitura. */
@@ -172,8 +193,9 @@ export function arrowGeometry(
   const uy = dy / len;
   const px = -uy;
   const py = ux;
-  const headLen = Math.min(16 * k, len / 2);
-  const halfW = 7 * k;
+  const hk = a.kind === "shot" ? 1.4 : 1;
+  const headLen = Math.min(16 * k * hk, len / 2);
+  const halfW = 7 * k * hk;
   const baseX = a.x2 - ux * headLen;
   const baseY = a.y2 - uy * headLen;
   const f = (n: number) => Math.round(n * 100) / 100;
@@ -183,6 +205,11 @@ export function arrowGeometry(
     `${f(baseX + px * halfW)},${f(baseY + py * halfW)}`,
     `${f(baseX - px * halfW)},${f(baseY - py * halfW)}`,
   ].join(" ");
+
+  // Linha: tracejado sem ponta (corredores, meio campo, zonas de joker).
+  if (a.kind === "line") {
+    return { line: `M${f(a.x1)} ${f(a.y1)} L${f(a.x2)} ${f(a.y2)}`, head: "" };
+  }
 
   const bodyLen = len - headLen * 0.8;
   if (a.kind !== "dribble") {

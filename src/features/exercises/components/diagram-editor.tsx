@@ -268,7 +268,7 @@ export function DiagramEditor({
 
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium">Peças</span>
-        <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-8">
+        <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
           <ToolButton active={tool === "move"} onClick={() => setTool("move")} label="Mover">
             <Move className="!size-4" />
           </ToolButton>
@@ -289,7 +289,7 @@ export function DiagramEditor({
 
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium">Desenhar</span>
-        <div className="grid grid-cols-4 gap-1.5">
+        <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
           {ARROW_KINDS.map((k) => (
             <ToolButton
               key={k}
