@@ -167,16 +167,16 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
 
 **Objetivo:** encontrar qualquer exercício em < 10 s, no campo.
 
-- [ ] **4.1 Camada de dados de `exercises`** (schemas, labels e testes já feitos) + `labels.ts` das etiquetas + testes.
-- [ ] **4.2 `/exercicios`**
+- [x] **4.1 Camada de dados de `exercises`** (schemas, labels e testes já feitos) + `labels.ts` das etiquetas + testes.
+- [x] **4.2 `/exercicios`**
   - Pesquisa (nome e descrição, `ilike`) + chips de etiquetas (overlap `&&`), ambos nos search params.
   - Linha com nome, etiquetas, minutos e nº de jogadores.
-- [ ] **4.3 Criar/editar**
+- [x] **4.3 Criar/editar**
   - Nome + etiquetas no topo.
   - Secção recolhida "Mais detalhes": descrição, objetivos, jogadores, duração, espaço, material, organização, regras, variantes, pontos de correção.
-- [ ] **4.4 `/exercicios/[id]`:** vista de leitura com a imagem grande primeiro, depois as secções preenchidas (as vazias não aparecem), texto 17 px.
-- [ ] **4.5 Imagem do exercício:** reutilizar o `src/lib/storage.ts` com 1600 px.
-- [ ] **4.6 Duplicar** (cria "Nome (variante)" e abre a edição) e **Arquivar**. Nunca há um botão "Apagar".
+- [x] **4.4 `/exercicios/[id]`:** vista de leitura com a imagem grande primeiro, depois as secções preenchidas (as vazias não aparecem), texto 17 px.
+- [x] **4.5 Imagem do exercício:** reutilizar o `src/lib/storage.ts` com 1600 px.
+- [x] **4.6 Duplicar** (cria "Nome (variante)" e abre a edição) e **Arquivar**. Nunca há um botão "Apagar".
 
 **Concluído quando:** há 15+ exercícios reais carregados e o teste dos 10 s passa.
 
