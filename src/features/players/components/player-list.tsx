@@ -80,7 +80,9 @@ export function PlayerList({ players, canEdit }: { players: PlayerListItem[]; ca
             <ListRow
               key={p.id}
               href={`/plantel/${p.id}`}
-              leading={<PlayerAvatar name={p.name} shirtNumber={p.shirt_number} />}
+              leading={
+                <PlayerAvatar name={p.name} shirtNumber={p.shirt_number} photoUrl={p.photo_url} />
+              }
               title={p.name}
               meta={formatPositions(p.positions) || "Sem posição definida"}
             />

@@ -12,6 +12,7 @@ import { runAction } from "@/lib/run-action";
 import { createPlayer, setPlayerActive, updatePlayer } from "../actions";
 import { footOptions, positionOptions, type DominantFoot, type PlayerPosition } from "../labels";
 import type { PlayerRow } from "../types";
+import { PhotoField } from "./photo-field";
 
 type Values = {
   name: string;
@@ -134,6 +135,12 @@ export function PlayerSheet({ open, onOpenChange, player }: PlayerSheetProps) {
           save(false);
         }}
       >
+        {player ? (
+          <Field label="Foto">
+            <PhotoField player={player} />
+          </Field>
+        ) : null}
+
         <Field label="Nome" htmlFor="player-name" error={errors.name?.[0]}>
           <Input
             id="player-name"

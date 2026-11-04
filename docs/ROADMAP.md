@@ -125,7 +125,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - Se houver um `training_session` ou `match` com a data de hoje, liga-o automaticamente (chip removível).
   - Abre a partir da ficha (com o jogador já escolhido). Cada um edita e apaga as suas observações.
   - *Concluído:* observação em < 30 s, cronometrada no telemóvel.
-- [ ] **2.6 Foto do jogador** — antes disto, confirmar a autorização de imagem com o clube.
+- [x] **2.6 Foto do jogador** — feito; falta testar no telemóvel com a BD real. Antes de usar fotos reais, confirmar a autorização de imagem com o clube.
   - `input type=file accept="image/*"` (câmara ou galeria).
   - Redimensionar para 512 px WebP no browser.
   - Upload para `{team_id}/players/{player_id}/{uuid}.webp` e atualizar `photo_path` (apagar a antiga).

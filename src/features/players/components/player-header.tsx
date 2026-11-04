@@ -37,7 +37,12 @@ export function PlayerHeader({ player, canEdit }: { player: PlayerRow; canEdit: 
       </div>
 
       <div className="flex items-center gap-4">
-        <PlayerAvatar name={player.name} shirtNumber={player.shirt_number} size="lg" />
+        <PlayerAvatar
+          name={player.name}
+          shirtNumber={player.shirt_number}
+          photoUrl={player.photo_url}
+          size="lg"
+        />
         <div className="min-w-0">
           <h1 className="text-[26px] leading-[30px] font-[650] tracking-tight">{player.name}</h1>
           {facts.length > 0 && (

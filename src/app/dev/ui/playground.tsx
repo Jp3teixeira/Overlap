@@ -33,6 +33,7 @@ const DEMO_PLAYERS = [1, 4, 5, 7, 8, 9, 10, 11, 14].map((n) => ({
 }));
 const DEMO_PLAYER: PlayerRow = {
   id: "demo-7",
+  team_id: "demo-team",
   name: "Jogador Sete",
   shirt_number: 7,
   birth_year: 2016,
@@ -40,6 +41,7 @@ const DEMO_PLAYER: PlayerRow = {
   dominant_foot: "direito",
   current_focus: "Receber de costas e rodar",
   photo_path: null,
+  photo_url: null,
   is_active: true,
 };
 const DEMO_OBS = [

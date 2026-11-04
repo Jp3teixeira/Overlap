@@ -3,7 +3,9 @@
 import { refresh } from "next/cache";
 import { fail, fromZodError, ok, type ActionResult } from "@/lib/action-result";
 import { dbFail, NO_PERMISSION } from "@/lib/db-error";
+import { isOwnMediaPath } from "@/lib/media-path";
 import { uuid } from "@/lib/schema-helpers";
+import { removeMedia } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentTeam } from "@/lib/team";
 import { playerFocusSchema, playerSchema, type PlayerInput } from "./schemas";
@@ -51,6 +53,56 @@ export async function updatePlayerFocus(
 export async function setPlayerActive(id: string, isActive: boolean): Promise<ActionResult> {
   if (!uuid.safeParse(id).success) return fail("Jogador inválido.");
   return updateRow("setPlayerActive", id, { is_active: isActive });
+}
+
+/**
+ * Associa ao jogador uma foto que o browser acabou de enviar para o Storage.
+ * Confirma que o caminho é desta equipa e deste jogador, e apaga a foto anterior.
+ */
+export async function setPlayerPhoto(id: string, path: string): Promise<ActionResult> {
+  if (!uuid.safeParse(id).success) return fail("Jogador inválido.");
+  const team = await getCurrentTeam();
+  if (!team.canEdit) return fail(NO_PERMISSION);
+  if (!isOwnMediaPath(path, team.id, "players", id)) return fail("Foto inválida. Tenta outra vez.");
+  return replacePhoto("setPlayerPhoto", id, team.id, path);
+}
+
+/** Remove a foto do jogador (volta ao número da camisola). */
+export async function removePlayerPhoto(id: string): Promise<ActionResult> {
+  if (!uuid.safeParse(id).success) return fail("Jogador inválido.");
+  const team = await getCurrentTeam();
+  if (!team.canEdit) return fail(NO_PERMISSION);
+  return replacePhoto("removePlayerPhoto", id, team.id, null);
+}
+
+async function replacePhoto(
+  where: string,
+  id: string,
+  teamId: string,
+  path: string | null,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { data: before } = await supabase
+    .from("players")
+    .select("photo_path")
+    .eq("id", id)
+    .eq("team_id", teamId)
+    .maybeSingle();
+
+  const { error } = await supabase
+    .from("players")
+    .update({ photo_path: path })
+    .eq("id", id)
+    .eq("team_id", teamId)
+    .select("id")
+    .single();
+  if (error) return dbFail(where, error);
+
+  const old = (before as { photo_path: string | null } | null)?.photo_path;
+  if (old && old !== path) await removeMedia(old);
+
+  refresh();
+  return ok();
 }
 
 async function updateRow(
