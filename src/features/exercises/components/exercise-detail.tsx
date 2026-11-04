@@ -34,10 +34,13 @@ export function ExerciseDetail({
   exercise,
   canEdit,
   autoEdit = false,
+  back = { href: "/exercicios", label: "Exercícios" },
 }: {
   exercise: ExerciseRow;
   canEdit: boolean;
   autoEdit?: boolean;
+  /** Para onde volta a seta (ex.: o treino de onde se veio). */
+  back?: { href: string; label: string };
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(autoEdit && canEdit);
@@ -84,11 +87,11 @@ export function ExerciseDetail({
     <article>
       <div className="mb-2 flex items-center justify-between">
         <Link
-          href="/exercicios"
+          href={back.href}
           className="text-primary -ml-1.5 inline-flex h-9 items-center gap-0.5 rounded-md pr-2 text-[15px] font-medium"
         >
           <ChevronLeft className="size-5" strokeWidth={2} />
-          Exercícios
+          {back.label}
         </Link>
         {canEdit && (
           <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>

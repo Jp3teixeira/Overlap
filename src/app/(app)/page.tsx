@@ -13,7 +13,8 @@ import { getHomeMatches } from "@/features/matches/queries";
 import { ObservationButton } from "@/features/observations/components/observation-button";
 import { getTodayContext } from "@/features/observations/queries";
 import { listPlayerOptions } from "@/features/players/queries";
-import { formatCountdown, formatDayShort, formatTime, todayISO } from "@/lib/dates";
+import { getHomeSession } from "@/features/training/queries";
+import { formatCountdown, formatDayLong, formatDayShort, formatTime, todayISO } from "@/lib/dates";
 import { getCurrentTeam } from "@/lib/team";
 
 const tile = "h-auto flex-col gap-1 py-3 text-sm";
@@ -35,10 +36,9 @@ export default function HomePage() {
       </header>
 
       <div className="flex flex-col gap-6">
-        <section>
-          <SectionTitle>Próximo treino</SectionTitle>
-          <EmptyState message="Ainda não há treinos planeados. Planeia o próximo em Treinos." />
-        </section>
+        <Suspense fallback={<HomeSessionSkeleton />}>
+          <HomeSession />
+        </Suspense>
         <Suspense fallback={<HomeMatchesSkeleton />}>
           <HomeMatches />
         </Suspense>
@@ -94,6 +94,57 @@ async function ObservationShortcut() {
       <MessageSquarePlus />
       Observação
     </ObservationButton>
+  );
+}
+
+/** Próximo treino: dia, hora, nº de exercícios e minutos planeados. Lê a sessão, por isso vive no <Suspense>. */
+async function HomeSession() {
+  await getCurrentTeam();
+  const today = todayISO();
+  const next = await getHomeSession(today);
+
+  return (
+    <section>
+      <SectionTitle>Próximo treino</SectionTitle>
+      {next ? (
+        <GroupedList>
+          <ListRow
+            href={`/treinos/${next.id}`}
+            marker
+            title={formatDayLong(next.session_date)}
+            meta={[
+              formatCountdown(today, next.session_date),
+              formatTime(next.start_time),
+              next.item_count > 0
+                ? `${next.item_count} ${next.item_count === 1 ? "exercício" : "exercícios"}`
+                : "Sem exercícios",
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+            trailing={
+              next.item_count > 0 ? (
+                <span className="font-semibold">
+                  {next.target_duration_min
+                    ? `${next.total_min}/${next.target_duration_min}′`
+                    : `${next.total_min}′`}
+                </span>
+              ) : null
+            }
+          />
+        </GroupedList>
+      ) : (
+        <EmptyState message="Ainda não há treinos planeados. Planeia o próximo em Treinos." />
+      )}
+    </section>
+  );
+}
+
+function HomeSessionSkeleton() {
+  return (
+    <section aria-busy aria-label="A carregar o próximo treino">
+      <SectionTitle>Próximo treino</SectionTitle>
+      <Skeleton className="h-14 w-full" />
+    </section>
   );
 }
 
