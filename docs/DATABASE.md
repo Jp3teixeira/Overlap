@@ -109,10 +109,20 @@ Regras extra:
 
 ## Backups
 
-O plano grátis não faz backups. Há duas soluções:
+O plano grátis não faz backups. O `.github/workflows/backup.yml` faz um todos os domingos (e quando o corres à mão em Actions → Backup semanal → Run workflow).
 
-- **Automática:** uma GitHub Action semanal com `pg_dump` (versão igual à major do Postgres do projeto), cifrado com `gpg --symmetric`, guardado como artifact com 30 dias de retenção (tarefa 2.7 do roadmap).
-  - Usar a connection string do **Session pooler**. A ligação direta é IPv6 e os runners do GitHub não a alcançam.
-- **Manual (alternativa):** `pg_dump` a partir do portátil, de vez em quando.
+- Guarda a base de dados (`public` + contas de `auth.users`), cifrada com AES-256, como artifact privado durante 30 dias.
+- **Não guarda as fotos/imagens do Storage.**
+- Secrets necessários: `SUPABASE_DB_URL` (connection string do **Session pooler**, porque a ligação direta é IPv6 e o GitHub não lá chega) e `BACKUP_PASSPHRASE`. Guarda a passphrase fora do GitHub.
 
-Testar o restauro uma vez. Um backup que nunca foi restaurado não conta.
+**Restaurar** (testado localmente: dados, políticas e RLS voltam):
+
+```bash
+gpg -d backup-AAAA-MM-DD.tar.gpg > backup.tar && tar -xf backup.tar && cd backup-AAAA-MM-DD
+# num projeto Supabase novo (public vazio), com a connection string do pooler em $DB:
+pg_restore -d "$DB" --data-only auth-users.dump     # 1. contas (mantém os UUIDs)
+pg_restore -d "$DB" --no-owner public.dump          # 2. schema + dados da app
+# 3. no SQL Editor: correr só a secção 12 (Storage) da 0001_initial_schema.sql
+```
+
+Faz o restauro uma vez num projeto de teste. Um backup que nunca foi restaurado não conta.

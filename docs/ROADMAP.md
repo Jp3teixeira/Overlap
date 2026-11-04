@@ -76,14 +76,14 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
 
 **Objetivo:** entrar no telemóvel uma vez e navegar pelas 5 secções vazias.
 
-- [ ] **1.1 Clientes Supabase + proxy**
+- [x] **1.1 Clientes Supabase + proxy** — falta testar com o projeto real
   - `src/lib/supabase/server.ts`, `client.ts` e `proxy.ts`, mais o `proxy.ts` na raiz, segundo o guia oficial do `@supabase/ssr` para Next.js.
   - Sem sessão → `/login`, exceto `/login` e assets.
-- [ ] **1.2 Login**
+- [x] **1.2 Login** — falta testar com o projeto real
   - `/login` com email + password e erro claro ("Email ou password errados").
   - Depois de entrar → `/`. A sessão fica guardada.
   - A ação "Terminar sessão" é uma Server Action.
-- [ ] **1.3 `getCurrentTeam()`** em `src/lib/team.ts`.
+- [x] **1.3 `getCurrentTeam()`** em `src/lib/team.ts`.
   - Utilizador sem equipa → página "Sem acesso a nenhuma equipa".
   - Teste unitário do mapeamento.
 - [x] **1.4 AppShell** — falta o menu da conta, que depende do login (1.2)
@@ -131,7 +131,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - Upload para `{team_id}/players/{player_id}/{uuid}.webp` e atualizar `photo_path` (apagar a antiga).
   - Mostrar com URL assinado. Opção "Remover foto".
   - Helpers em `src/lib/storage.ts`, para reutilizar na 4.5.
-- [ ] **2.7 Backup semanal**
+- [x] **2.7 Backup semanal** — workflow feito e restauro testado localmente; faltam os 2 secrets e a primeira execução
   - `.github/workflows/backup.yml` com cron ao domingo de madrugada.
   - `pg_dump` (versão igual à do projeto) pela connection string do Session pooler (secret `SUPABASE_DB_URL`).
   - Cifrar com `gpg --symmetric --batch --passphrase` (secret `BACKUP_PASSPHRASE`).
@@ -213,7 +213,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - Próximo treino (com `TimeBar`), próximo jogo e último resultado.
   - 3 ações rápidas: Observação, Novo treino, Registar jogo.
   - Mais nada.
-- [ ] **6.2 PWA**
+- [x] **6.2 PWA**
   - `app/manifest.ts` com nome "Overlap", `display: standalone` e cor `#12306B`.
   - Ícones 192/512 + apple-touch-icon (um "O" branco sobre navy serve por agora).
   - Sem service worker.
