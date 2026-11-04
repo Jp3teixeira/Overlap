@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { CalendarDays, ClipboardList, MessageSquarePlus } from "lucide-react";
+import { OverlapMark } from "@/components/overlap-mark";
+import { TimeBar } from "@/components/time-bar";
 import { EmptyState } from "@/components/empty-state";
 import { GroupedList, ListRow } from "@/components/grouped-list";
 import { SectionTitle } from "@/components/page-header";
@@ -14,17 +16,30 @@ import { ObservationButton } from "@/features/observations/components/observatio
 import { getTodayContext } from "@/features/observations/queries";
 import { listPlayerOptions } from "@/features/players/queries";
 import { getHomeSession } from "@/features/training/queries";
-import { formatCountdown, formatDayLong, formatDayShort, formatTime, todayISO } from "@/lib/dates";
+import {
+  formatCountdown,
+  formatDayLong,
+  formatDayShort,
+  formatTime,
+  formatTimeUntil,
+  todayISO,
+} from "@/lib/dates";
 import { getCurrentTeam } from "@/lib/team";
 
 const tile = "h-auto flex-col gap-1 py-3 text-sm";
+const card =
+  "border-border bg-card active:bg-muted relative block overflow-hidden rounded-lg border p-4 outline-none focus-visible:bg-muted";
+const marker = <span aria-hidden className="bg-marker absolute inset-y-0 left-0 w-[3px]" />;
 
 // Início: próximo treino, próximo jogo, último resultado e 3 atalhos. Nada mais (F6.1).
 export default function HomePage() {
   return (
     <>
       <header className="mb-6 flex items-center justify-between">
-        <h1 className="text-[26px] leading-[30px] font-[650] tracking-tight lg:hidden">Overlap</h1>
+        <h1 className="flex items-center gap-2.5 text-[26px] leading-[30px] font-[650] tracking-tight lg:hidden">
+          <OverlapMark className="text-primary h-5 w-8" />
+          Overlap
+        </h1>
         <form action={signOut} className="lg:hidden">
           <Button type="submit" variant="ghost" size="sm" className="text-muted-foreground">
             Sair
@@ -107,12 +122,11 @@ async function HomeSession() {
     <section>
       <SectionTitle>Próximo treino</SectionTitle>
       {next ? (
-        <GroupedList>
-          <ListRow
-            href={`/treinos/${next.id}`}
-            marker
-            title={formatDayLong(next.session_date)}
-            meta={[
+        <Link href={`/treinos/${next.id}`} className={card}>
+          {marker}
+          <p className="text-base leading-[22px] font-medium">{formatDayLong(next.session_date)}</p>
+          <p className="text-muted-foreground mt-0.5 text-[13px] leading-[18px]">
+            {[
               formatCountdown(today, next.session_date),
               formatTime(next.start_time),
               next.item_count > 0
@@ -121,17 +135,11 @@ async function HomeSession() {
             ]
               .filter(Boolean)
               .join(" · ")}
-            trailing={
-              next.item_count > 0 ? (
-                <span className="font-semibold">
-                  {next.target_duration_min
-                    ? `${next.total_min}/${next.target_duration_min}′`
-                    : `${next.total_min}′`}
-                </span>
-              ) : null
-            }
-          />
-        </GroupedList>
+          </p>
+          {next.item_count > 0 && (
+            <TimeBar items={next.items} targetMin={next.target_duration_min} className="mt-3" />
+          )}
+        </Link>
       ) : (
         <EmptyState message="Ainda não há treinos planeados. Planeia o próximo em Treinos." />
       )}
@@ -153,26 +161,36 @@ async function HomeMatches() {
   await getCurrentTeam();
   const today = todayISO();
   const { next, last } = await getHomeMatches(today);
+  const until = next ? formatTimeUntil(next.match_date, next.kickoff_time) : null;
 
   return (
     <>
       <section>
         <SectionTitle>Próximo jogo</SectionTitle>
         {next ? (
-          <GroupedList>
-            <ListRow
-              href={`/jogos/${next.id}`}
-              marker
-              title={next.opponent}
-              meta={[
-                formatCountdown(today, next.match_date),
-                [formatDayShort(next.match_date), formatTime(next.kickoff_time)]
-                  .filter(Boolean)
-                  .join(", "),
-                VENUE_LABEL[next.venue],
-              ].join(" · ")}
-            />
-          </GroupedList>
+          <Link href={`/jogos/${next.id}`} className={card}>
+            {marker}
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-lg leading-6 font-semibold">{next.opponent}</p>
+              <span className="bg-secondary text-secondary-foreground shrink-0 rounded-md px-2 py-0.5 text-[13px] font-medium">
+                {VENUE_LABEL[next.venue]}
+              </span>
+            </div>
+            <p className="text-muted-foreground mt-0.5 text-[13px] leading-[18px]">
+              {[formatDayShort(next.match_date), formatTime(next.kickoff_time)]
+                .filter(Boolean)
+                .join(", ")}
+            </p>
+            {until ? (
+              <p className="mt-3 text-[44px] leading-none font-[750] tracking-tight [font-stretch:88%] tabular-nums">
+                {until}
+              </p>
+            ) : (
+              <p className="mt-3 text-[28px] leading-none font-[750] tracking-tight [font-stretch:88%]">
+                {formatCountdown(today, next.match_date)}
+              </p>
+            )}
+          </Link>
         ) : (
           <EmptyState message="Não há jogos marcados. Adiciona o calendário da época em Jogos." />
         )}

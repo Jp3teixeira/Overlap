@@ -220,7 +220,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
 ## F6 — Início + app instalável → MVP em uso
 
 - [ ] **6.1 Início**
-  - Próximo treino, próximo jogo e último resultado (feito); falta a `TimeBar` no próximo treino.
+  - Próximo treino (com `TimeBar`), próximo jogo (com contagem "2d 17h") e último resultado (feito).
   - 3 ações rápidas: Observação, Novo treino, Registar jogo.
   - Mais nada.
 - [x] **6.2 PWA**

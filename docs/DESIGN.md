@@ -92,6 +92,8 @@ A largura semi-condensada nos títulos dá um ar de desporto sem cair no cartaz.
 - **Sombras:** só em sheets, menus e toasts. Listas e páginas não têm sombra.
 - **Listas agrupadas em vez de cartões:** linhas dentro de um único contentor com borda e divisórias, como as Definições do iOS. Nada de grelhas de cartões soltos.
 - **Ícones:** Lucide, 20 px, traço 1.75. Nunca emojis como ícones.
+- **Navegação:** Início `House`, Plantel `Users`, Jogos `BallIcon` (bola feita à mão em `components/icons`, o Lucide não tem), Exercícios `TrafficCone`, Treinos `Timer`. O separador ativo leva uma pílula `secondary` atrás do ícone.
+- **Símbolo overlap:** `OverlapMark` (dois círculos que se cruzam). Só na barra lateral, no título do Início e nos estados vazios. O número da camisola gigante só aparece como marca de água na ficha do jogador.
 - **Alvos de toque:** pelo menos 44 × 44 px. A ação principal fica ao alcance do polegar (em baixo).
 - **Movimento:** só em resposta a ações (abrir um sheet, confirmar). Sem animações de entrada.
 
