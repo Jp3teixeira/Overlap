@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+/* Tokens do Overlap — ver docs/DESIGN.md. Nomes compatíveis com o shadcn/ui. */
+:root {
+  --background: #f3f5f8;
+  --foreground: #0e1b33;
+  --card: #ffffff;
+  --card-foreground: #0e1b33;
+  --popover: #ffffff;
+  --popover-foreground: #0e1b33;
+  --primary: #12306b;
+  --primary-foreground: #ffffff;
+  --secondary: #e8edf5;
+  --secondary-foreground: #12306b;
+  --muted: #eef1f5;
+  --muted-foreground: #5b6780;
+  --accent: #e8edf5;
+  --accent-foreground: #12306b;
+  --destructive: #b33a3a;
+  --border: #dde2ea;
+  --input: #dde2ea;
+  --ring: #12306b;
+  --radius: 0.625rem;
+
+  --navy-deep: #0a1d45;
+  --sidebar: #0a1d45;
+  --sidebar-foreground: #e7ecf5;
+  --marker: #e2b33a;
+  --result-win: #1e7a4a;
+  --result-draw: #6b7280;
+  --result-loss: #b33a3a;
+  --time-1: #0a1d45;
+  --time-2: #2f5596;
+  --time-3: #7e9ccb;
+  --time-4: #b5c6e3;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-navy-deep: var(--navy-deep);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-marker: var(--marker);
+  --color-result-win: var(--result-win);
+  --color-result-draw: var(--result-draw);
+  --color-result-loss: var(--result-loss);
+
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Títulos semi-condensados (eixo wdth da Archivo) */
+  h1,
+  h2,
+  h3 {
+    font-stretch: 88%;
+    text-wrap: balance;
+  }
+  /* Nunca abaixo de 16px: evita o zoom do iOS ao focar */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
