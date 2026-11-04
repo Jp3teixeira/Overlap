@@ -230,7 +230,7 @@ function PieceShape({
           fill="rgba(255,255,255,0.92)"
           stroke="#111827"
           strokeWidth={1.5 * k}
-          transform={piece.r === 90 ? "rotate(90)" : undefined}
+          transform={piece.r ? `rotate(${piece.r})` : undefined}
         />
       )}
       {kind === "ball" && (

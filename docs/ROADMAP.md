@@ -194,33 +194,33 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
 
 **Objetivo:** os 3 treinos da semana planeados na app.
 
-- [ ] **5.1 Camada de dados de `training`** (schemas, `sumMinutes`/`timeBarSegments` e testes já feitos)
+- [x] **5.1 Camada de dados de `training`** (schemas, `sumMinutes`/`timeBarSegments` e testes já feitos)
   - Sessões e itens.
   - Ação `reorderItems` que usa a RPC `reorder_session_items`.
   - Função pura `sumMinutes` com teste.
-- [ ] **5.2 `/treinos`**
+- [x] **5.2 `/treinos`**
   - Próximos | Histórico.
   - Linha com dia da semana + data, total/alvo e estado. O próximo tem o marcador gold.
-- [ ] **5.3 Criar treino** (sheet): data, hora, duração alvo (60 por defeito), objetivo.
-- [ ] **5.4 `/treinos/[id]`**
+- [x] **5.3 Criar treino** (sheet): data, hora, duração alvo (60 por defeito), objetivo.
+- [x] **5.4 `/treinos/[id]`**
   - `TimeBar` + lista numerada de itens com `MinutesStepper` (±5).
   - "Adicionar exercício" abre um sheet com pesquisa + chips da biblioteca, ou um item livre.
   - Total vs. alvo sempre visível.
-- [ ] **5.5 Reordenar**
+- [x] **5.5 Reordenar**
   - Botões subir/descer no mobile.
-  - Arrastar no desktop (perguntar antes de adicionar o `dnd-kit`).
-- [ ] **5.6 Material:** lista sem repetidos a partir do `equipment` dos exercícios usados.
-- [ ] **5.7 Duplicar treino:** escolher a nova data, copiar os itens e os minutos.
-- [ ] **5.8 Fecho do treino:** "Marcar como realizado" + nota pós-treino + atalho "Observações deste treino".
+  - Arrastar no desktop (`dnd-kit`): **não feito**; os botões subir/descer servem também no desktop.
+- [x] **5.6 Material:** lista sem repetidos a partir do `equipment` dos exercícios usados.
+- [x] **5.7 Duplicar treino:** escolher a nova data, copiar os itens e os minutos.
+- [x] **5.8 Fecho do treino:** "Marcar como realizado" + nota pós-treino + atalho "Observações deste treino".
   - O atalho abre o `QuickObservation` com o treino já ligado.
-- [ ] **5.9 Vista do campo:** tocar num item da biblioteca abre a vista de leitura do exercício, com voltar para o treino.
+- [x] **5.9 Vista do campo:** tocar num item da biblioteca abre a vista de leitura do exercício, com voltar para o treino.
 
 **Concluído quando:** uma semana inteira (3 treinos) foi planeada e fechada na app.
 
 ## F6 — Início + app instalável → MVP em uso
 
 - [ ] **6.1 Início**
-  - Próximo treino (com `TimeBar`), próximo jogo e último resultado.
+  - Próximo treino, próximo jogo e último resultado (feito); falta a `TimeBar` no próximo treino.
   - 3 ações rápidas: Observação, Novo treino, Registar jogo.
   - Mais nada.
 - [x] **6.2 PWA**

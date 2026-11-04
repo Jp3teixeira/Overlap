@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Eraser, Move, RotateCw, Trash2, Undo2 } from "lucide-react";
+import { Eraser, Move, Trash2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Segmented } from "@/components/segmented";
 import { Button } from "@/components/ui/button";
@@ -139,7 +139,7 @@ export function DiagramEditor({
         ...diagram,
         pieces: [
           ...diagram.pieces,
-          { id, kind, x: pt.x, y: pt.y, ...(kind === "goal" ? { r: 0 as const } : {}) },
+          { id, kind, x: pt.x, y: pt.y, ...(kind === "goal" ? { r: 0 } : {}) },
         ],
       });
       setSelected(id);
@@ -218,14 +218,15 @@ export function DiagramEditor({
     setSelected(null);
   }
 
-  function rotateSelected() {
+  /** Roda a baliza selecionada para `angle` graus. `record` guarda um passo no "Desfazer". */
+  function rotateSelected(angle: number, record: boolean) {
     if (!selectedPiece || selectedPiece.kind !== "goal") return;
-    commit({
+    const next = {
       ...diagram,
-      pieces: diagram.pieces.map((p) =>
-        p.id === selectedPiece.id ? { ...p, r: p.r === 90 ? (0 as const) : (90 as const) } : p,
-      ),
-    });
+      pieces: diagram.pieces.map((p) => (p.id === selectedPiece.id ? { ...p, r: angle } : p)),
+    };
+    if (record) commit(next);
+    else onChange(next);
   }
 
   function clearAll() {
@@ -330,12 +331,6 @@ export function DiagramEditor({
           <Trash2 />
           Apagar
         </Button>
-        {selectedPiece?.kind === "goal" && (
-          <Button type="button" variant="outline" size="sm" onClick={rotateSelected}>
-            <RotateCw />
-            Rodar
-          </Button>
-        )}
         <Button
           type="button"
           variant="ghost"
@@ -357,6 +352,38 @@ export function DiagramEditor({
           {confirm === "remove" ? "Toca outra vez" : "Tirar campo"}
         </Button>
       </div>
+
+      {selectedPiece?.kind === "goal" && (
+        <div className="border-border flex flex-col gap-2 rounded-lg border p-3">
+          <label htmlFor="goal-angle" className="text-sm font-medium">
+            Ângulo da baliza: {Math.round((selectedPiece.r ?? 0) % 180)}°
+          </label>
+          <input
+            id="goal-angle"
+            type="range"
+            min={0}
+            max={175}
+            step={5}
+            value={Math.round((selectedPiece.r ?? 0) % 180)}
+            onPointerDown={() => setPast((p) => [...p.slice(-29), diagram])}
+            onChange={(e) => rotateSelected(Number(e.target.value), false)}
+            className="accent-primary h-11 w-full"
+          />
+          <div className="grid grid-cols-4 gap-1.5">
+            {[0, 45, 90, 135].map((deg) => (
+              <Button
+                key={deg}
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => rotateSelected(deg, true)}
+              >
+                {deg}°
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
