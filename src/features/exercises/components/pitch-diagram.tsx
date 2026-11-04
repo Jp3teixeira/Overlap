@@ -137,34 +137,42 @@ function Pitch({ field, k }: { field: FieldType; k: number }) {
   );
 }
 
+const LINE_BLUE = "#bfe3ff";
+
 function ArrowShape({ arrow, k, selected }: { arrow: Arrow; k: number; selected: boolean }) {
   const g = arrowGeometry(arrow, k);
   if (!g) return null;
-  const dash = arrow.kind === "pass" ? `${9 * k} ${7 * k}` : undefined;
+  const isLine = arrow.kind === "line";
+  const color = isLine ? LINE_BLUE : LINE;
+  const width = (arrow.kind === "shot" ? 5 : 3) * k;
+  const dash =
+    arrow.kind === "pass" ? `${9 * k} ${7 * k}` : isLine ? `${12 * k} ${8 * k}` : undefined;
   return (
     <g data-id={arrow.id}>
       {selected && (
         <>
-          <path d={g.line} fill="none" stroke={SELECT} strokeWidth={8 * k} strokeLinecap="round" />
-          <polygon
-            points={g.head}
-            fill={SELECT}
-            stroke={SELECT}
-            strokeWidth={5 * k}
-            strokeLinejoin="round"
-          />
+          <path d={g.line} fill="none" stroke={SELECT} strokeWidth={9 * k} strokeLinecap="round" />
+          {g.head && (
+            <polygon
+              points={g.head}
+              fill={SELECT}
+              stroke={SELECT}
+              strokeWidth={5 * k}
+              strokeLinejoin="round"
+            />
+          )}
         </>
       )}
       <path
         d={g.line}
         fill="none"
-        stroke={LINE}
-        strokeWidth={3 * k}
+        stroke={color}
+        strokeWidth={width}
         strokeDasharray={dash}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <polygon points={g.head} fill={LINE} />
+      {g.head && <polygon points={g.head} fill={color} />}
       {/* Área de toque mais larga que o traço. */}
       <path
         d={g.line}
@@ -195,7 +203,7 @@ function PieceShape({
       {selected && (
         <circle r={r * 1.75} fill="rgba(226,179,58,0.25)" stroke={SELECT} strokeWidth={2.5 * k} />
       )}
-      {(kind === "a" || kind === "b" || kind === "n") && (
+      {(kind === "a" || kind === "b" || kind === "c" || kind === "n") && (
         <circle r={r} fill={PIECE_FILL[kind]} stroke={stroke} strokeWidth={2 * k} />
       )}
       {kind === "gk" && (
@@ -210,6 +218,51 @@ function PieceShape({
           >
             GR
           </text>
+        </>
+      )}
+      {kind === "coach" && (
+        <>
+          <circle r={r} fill={PIECE_FILL.coach} stroke={stroke} strokeWidth={2 * k} />
+          <text
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={r * 1.05}
+            fontWeight={700}
+            fill="#fff"
+          >
+            T
+          </text>
+        </>
+      )}
+      {kind === "disc" && (
+        <ellipse
+          rx={r * 0.85}
+          ry={r * 0.5}
+          fill={PIECE_FILL.disc}
+          stroke={stroke}
+          strokeWidth={1.5 * k}
+        />
+      )}
+      {kind === "pole" && (
+        <>
+          <rect
+            x={-r * 0.16}
+            y={-r * 1.1}
+            width={r * 0.32}
+            height={r * 1.9}
+            fill={PIECE_FILL.pole}
+            stroke={stroke}
+            strokeWidth={1 * k}
+          />
+          <rect
+            x={-r * 0.5}
+            y={r * 0.7}
+            width={r}
+            height={r * 0.22}
+            fill={PIECE_FILL.pole}
+            stroke={stroke}
+            strokeWidth={1 * k}
+          />
         </>
       )}
       {kind === "cone" && (
@@ -291,6 +344,29 @@ export function PieceDot({ kind }: { kind: PieceKind }) {
         style={{ background: PIECE_FILL.cone, clipPath: "polygon(50% 0, 100% 100%, 0 100%)" }}
       />
     );
+  if (kind === "disc")
+    return (
+      <span
+        className="h-2 w-3.5 rounded-full border border-white"
+        style={{ background: PIECE_FILL.disc }}
+      />
+    );
+  if (kind === "pole")
+    return (
+      <span className="relative block h-3.5 w-3">
+        <span className="absolute inset-x-[5px] top-0 bottom-0.5 bg-[#111827]" />
+        <span className="absolute inset-x-0 bottom-0 h-[3px] bg-[#111827]" />
+      </span>
+    );
+  if (kind === "coach")
+    return (
+      <span
+        className="grid size-3.5 place-items-center rounded-full border border-white text-[9px] leading-none font-bold text-white"
+        style={{ background: PIECE_FILL.coach }}
+      >
+        T
+      </span>
+    );
   return (
     <span
       className={cn("rounded-full border border-white", kind === "ball" ? "size-2.5" : "size-3.5")}
@@ -302,17 +378,18 @@ export function PieceDot({ kind }: { kind: PieceKind }) {
 export function ArrowSwatch({ kind }: { kind: ArrowKind }) {
   const g = arrowGeometry({ kind, x1: 2, y1: 12, x2: 22, y2: 12 }, 0.45);
   if (!g) return null;
+  const color = kind === "line" ? LINE_BLUE : "#fff";
   return (
     <svg viewBox="0 0 24 24" className="size-6" aria-hidden>
       <path
         d={g.line}
         fill="none"
-        stroke="#fff"
-        strokeWidth={1.6}
-        strokeDasharray={kind === "pass" ? "4 3" : undefined}
+        stroke={color}
+        strokeWidth={kind === "shot" ? 2.6 : 1.6}
+        strokeDasharray={kind === "pass" ? "4 3" : kind === "line" ? "4 2.5" : undefined}
         strokeLinecap="round"
       />
-      <polygon points={g.head} fill="#fff" />
+      {g.head && <polygon points={g.head} fill={color} />}
     </svg>
   );
 }
