@@ -55,7 +55,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - Scripts `typecheck` e `test`, e Vitest instalado.
   - *Concluído:* `npm run build` passa.
 - [x] **0.2 Documentos** — copiar `AGENTS.md`, `CLAUDE.md`, `docs/` e `supabase/` deste pacote para a raiz do repo.
-  - O `.gitignore` inclui `.env*` e `supabase/bootstrap.local.sql`.
+  - O `.gitignore` inclui `.env*`.
   - Commit.
 - [x] **0.3 shadcn + tokens + fonte** — falta só validar o `/dev/ui` no teu telemóvel (o registo do shadcn não estava acessível na cloud; os componentes de `src/components/ui` foram escritos à mão, no mesmo padrão)
   - `npx shadcn@latest init`.

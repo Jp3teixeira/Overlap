@@ -103,8 +103,8 @@ Regras extra:
 1. Supabase → novo projeto numa região da UE.
 2. Authentication → Sign In / Providers: desligar **"Allow new users to sign up"**. Email + password ligado.
 3. SQL Editor → colar e correr `0001_initial_schema.sql`.
-4. Authentication → Users → **Add user** → Create new user (×2, com "Auto Confirm"). Copiar os UUIDs.
-5. Copiar `bootstrap.sql` para `bootstrap.local.sql` (está no `.gitignore`), preencher os UUIDs e correr no SQL Editor.
+4. Authentication → Users → **Add user** → Create new user (com "Auto Confirm User" ligado).
+5. SQL Editor → colar `bootstrap.sql`, trocar o email pelo da conta e correr. Não fazer commit da versão com emails.
 6. SQL Editor → `tests/rls_smoke.sql`. Esperado: `PASS A`, `PASS B`, `PASS C`.
 
 ## Backups
