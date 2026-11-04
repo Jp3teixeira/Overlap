@@ -148,15 +148,40 @@ describe("exerciseSchema", () => {
     const r = exerciseSchema.safeParse({ name: "X", tags: [] });
     expect(r.success).toBe(false);
   });
-  it("mínimo de jogadores não pode passar o máximo", () => {
-    const r = exerciseSchema.safeParse({
-      name: "X",
-      tags: ["posse"],
-      min_players: "10",
-      max_players: "8",
+  it("converte os números do formulário e aceita o campo desenhado", () => {
+    const r = exerciseSchema.parse({
+      name: "3 vs 3",
+      tags: ["org_defensiva"],
+      duration_min: "3",
+      series: "3",
+      rest_seconds: "30",
+      min_players: "6",
+      success_criteria: "  Fechar o centro ",
+      diagram: { v: 1, field: "quadrado", pieces: [], arrows: [], zones: [] },
     });
-    expect(r.success).toBe(false);
-    if (!r.success) expect(r.error.issues[0].path).toEqual(["max_players"]);
+    expect(r).toMatchObject({
+      duration_min: 3,
+      series: 3,
+      rest_seconds: 30,
+      min_players: 6,
+      success_criteria: "Fechar o centro",
+    });
+    expect(r.diagram?.field).toBe("quadrado");
+  });
+  it("sem desenho o campo fica null; desenho inválido é recusado", () => {
+    expect(exerciseSchema.parse({ name: "X", tags: ["posse"] }).diagram).toBeNull();
+    expect(
+      exerciseSchema.safeParse({ name: "X", tags: ["posse"], diagram: { v: 1, field: "lua" } })
+        .success,
+    ).toBe(false);
+  });
+  it("descanso e séries têm limites", () => {
+    expect(
+      exerciseSchema.safeParse({ name: "X", tags: ["posse"], rest_seconds: "601" }).success,
+    ).toBe(false);
+    expect(exerciseSchema.safeParse({ name: "X", tags: ["posse"], series: "0" }).success).toBe(
+      false,
+    );
   });
 });
 

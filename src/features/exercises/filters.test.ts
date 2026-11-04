@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { filtersToUrl, formatPlayers, parseFilters, searchPattern, variantName } from "./filters";
+import {
+  filtersToUrl,
+  formatDuration,
+  formatPlayers,
+  formatRest,
+  parseFilters,
+  searchPattern,
+  variantName,
+} from "./filters";
 
 describe("parseFilters", () => {
   it("sem params devolve filtros vazios", () => {
@@ -60,12 +68,29 @@ describe("searchPattern", () => {
 });
 
 describe("formatPlayers", () => {
-  it("formata intervalos e extremos", () => {
-    expect(formatPlayers(6, 10)).toBe("6–10");
-    expect(formatPlayers(8, 8)).toBe("8");
-    expect(formatPlayers(null, 10)).toBe("até 10");
-    expect(formatPlayers(6, null)).toBe("a partir de 6");
-    expect(formatPlayers(null, null)).toBe("");
+  it("mostra o mínimo com +", () => {
+    expect(formatPlayers(6)).toBe("6+");
+    expect(formatPlayers(null)).toBe("");
+  });
+});
+
+describe("formatDuration", () => {
+  it("junta minutos e séries", () => {
+    expect(formatDuration(3, 3)).toBe("3 min × 3");
+    expect(formatDuration(10, 1)).toBe("10 min");
+    expect(formatDuration(10, null)).toBe("10 min");
+    expect(formatDuration(null, 4)).toBe("4 séries");
+    expect(formatDuration(null, null)).toBe("");
+  });
+});
+
+describe("formatRest", () => {
+  it("formata segundos e minutos", () => {
+    expect(formatRest(30)).toBe("30 s");
+    expect(formatRest(0)).toBe("0 s");
+    expect(formatRest(60)).toBe("1 min");
+    expect(formatRest(90)).toBe("1 min 30 s");
+    expect(formatRest(null)).toBe("");
   });
 });
 

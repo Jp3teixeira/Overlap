@@ -41,12 +41,25 @@ export function searchPattern(q: string): string | null {
   return clean ? `%${clean}%` : null;
 }
 
-/** "6", "6–10", "até 10", "a partir de 6" ou "" se não há dados. */
-export function formatPlayers(min: number | null, max: number | null): string {
-  if (min !== null && max !== null) return min === max ? `${min}` : `${min}–${max}`;
-  if (max !== null) return `até ${max}`;
-  if (min !== null) return `a partir de ${min}`;
-  return "";
+/** "6+" (mínimo de jogadores) ou "" se não há dados. */
+export function formatPlayers(min: number | null): string {
+  return min === null ? "" : `${min}+`;
+}
+
+/** "3 min × 3", "3 min", "3 séries" ou "" se não há dados. */
+export function formatDuration(minutes: number | null, series: number | null): string {
+  if (minutes !== null)
+    return series && series > 1 ? `${minutes} min × ${series}` : `${minutes} min`;
+  return series && series > 1 ? `${series} séries` : "";
+}
+
+/** "30 s", "1 min", "1 min 30 s" ou "" se não há dados. */
+export function formatRest(seconds: number | null): string {
+  if (seconds === null) return "";
+  if (seconds < 60) return `${seconds} s`;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return s ? `${m} min ${s} s` : `${m} min`;
 }
 
 const VARIANT_SUFFIX = " (variante)";

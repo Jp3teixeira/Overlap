@@ -2,15 +2,15 @@
 
 Uma "sessão" são cerca de 2 h com o Claude Code. As estimativas são por alto, para planear e não para cumprir.
 
-| Fase | O que dá | Sessões |
-|---|---|---|
-| F0 | Setup: projeto, Supabase, Vercel | 1–2 |
-| F1 | Login + estrutura da app | 2 |
-| F2 | Plantel + observações (**módulo de referência**) | 3 |
-| F3 | Jogos + análise pós-jogo | 2 |
-| F4 | Biblioteca de exercícios | 2 |
-| F5 | Treinos | 3 |
-| F6 | Início + app instalável + polimento → **MVP em uso** | 2 |
+| Fase | O que dá                                             | Sessões |
+| ---- | ---------------------------------------------------- | ------- |
+| F0   | Setup: projeto, Supabase, Vercel                     | 1–2     |
+| F1   | Login + estrutura da app                             | 2       |
+| F2   | Plantel + observações (**módulo de referência**)     | 3       |
+| F3   | Jogos + análise pós-jogo                             | 2       |
+| F4   | Biblioteca de exercícios                             | 2       |
+| F5   | Treinos                                              | 3       |
+| F6   | Início + app instalável + polimento → **MVP em uso** | 2       |
 
 A ordem prioriza o que se perde se não for registado já: as observações e as jornadas. Os exercícios estão na vossa cabeça e não fogem.
 
@@ -53,7 +53,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - Repo privado no GitHub.
   - Prettier + `prettier-plugin-tailwindcss`.
   - Scripts `typecheck` e `test`, e Vitest instalado.
-  - *Concluído:* `npm run build` passa.
+  - _Concluído:_ `npm run build` passa.
 - [x] **0.2 Documentos** — copiar `AGENTS.md`, `CLAUDE.md`, `docs/` e `supabase/` deste pacote para a raiz do repo.
   - O `.gitignore` inclui `.env*`.
   - Commit.
@@ -63,14 +63,14 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - Archivo via `next/font` com o eixo `wdth`.
   - Adicionar os componentes: button, input, textarea, label, drawer, dialog, dropdown-menu, sonner, skeleton, badge, toggle-group.
   - Página temporária `/dev/ui` com botão, input, uma lista agrupada e chips, para validar o visual no telemóvel.
-  - *Concluído:* o `/dev/ui` no telemóvel parece "Overlap", não shadcn por defeito.
+  - _Concluído:_ o `/dev/ui` no telemóvel parece "Overlap", não shadcn por defeito.
 - [ ] **0.4 Supabase** — seguir "Arranque" do `docs/DATABASE.md`.
-  - *Concluído:* o `rls_smoke.sql` dá 3 × PASS.
+  - _Concluído:_ o `rls_smoke.sql` dá 3 × PASS.
 - [ ] **0.5 Tipos** — `supabase login` e o script `db:types`, que gera `src/types/database.ts`. Fazer commit dos tipos.
 - [ ] **0.6 Vercel**
   - Importar o repo.
   - Env vars: `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (a chave publishable; em projetos antigos chama-se "anon").
-  - *Concluído:* o URL de produção abre no telemóvel.
+  - _Concluído:_ o URL de produção abre no telemóvel.
 
 ## F1 — Login e estrutura
 
@@ -93,6 +93,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
 - [x] **1.5 Componentes base:** `ResponsiveSheet`, `GroupedList`/`ListRow`, `EmptyState`, `Chip`/`ChipGroup`, `Segmented`; o tipo `ActionResult` em `src/lib/action-result.ts`; e um helper que mostra o toast a partir do resultado.
 
 **Concluído quando:**
+
 - as 2 contas entram no telemóvel;
 - um URL aberto sem sessão vai para `/login`;
 - as 5 secções navegam.
@@ -124,7 +125,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - O botão "Guardar e outro" mantém o sheet aberto para o jogador seguinte.
   - Se houver um `training_session` ou `match` com a data de hoje, liga-o automaticamente (chip removível).
   - Abre a partir da ficha (com o jogador já escolhido). Cada um edita e apaga as suas observações.
-  - *Concluído:* observação em < 30 s, cronometrada no telemóvel.
+  - _Concluído:_ observação em < 30 s, cronometrada no telemóvel.
 - [x] **2.6 Foto do jogador** — feito; falta testar no telemóvel com a BD real. Antes de usar fotos reais, confirmar a autorização de imagem com o clube.
   - `input type=file accept="image/*"` (câmara ou galeria).
   - Redimensionar para 512 px WebP no browser.
@@ -139,6 +140,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - Correr à mão uma vez, descarregar e decifrar para confirmar que funciona.
 
 **Concluído quando:**
+
 - os jogadores reais estão carregados;
 - o Tiago registou pelo menos uma observação sozinho;
 - o primeiro backup foi feito e decifrado.
@@ -160,6 +162,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
 - [x] **3.5 Observações do jogo:** lista das observações ligadas + botão "Observação" (`QuickObservation` com o jogo já ligado).
 
 **Concluído quando:**
+
 - as 2 jornadas já jogadas e o resto do calendário estão registados;
 - a análise do jogo do fim de semana foi feita no telemóvel.
 
@@ -177,6 +180,13 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
 - [x] **4.4 `/exercicios/[id]`:** vista de leitura com a imagem grande primeiro, depois as secções preenchidas (as vazias não aparecem), texto 17 px.
 - [x] **4.5 Imagem do exercício:** reutilizar o `src/lib/storage.ts` com 1600 px.
 - [x] **4.6 Duplicar** (cria "Nome (variante)" e abre a edição) e **Arquivar**. Nunca há um botão "Apagar".
+
+- [x] **4.7 Biblioteca visual** (migração `0002`)
+  - Campo desenhado na app (SVG, sem dependências): campo todo, meio campo ou quadrado, com peças (equipas A/B, neutros, GR, cones, balizas, bola), setas (passe, desmarcação, condução) e zonas.
+  - Dados estruturados: duração × séries, descanso, jogadores (só mínimo), espaço, material, critérios de sucesso.
+  - Ficha pensada para 5 minutos: campo + legenda, números, "Como se joga", objetivos e critérios; regras e variantes recolhidas.
+  - Lista com miniatura do campo e "3 vs 3".
+  - Deixam de se usar `max_players`, `organization` e `coaching_points` (as colunas ficam).
 
 **Concluído quando:** há 15+ exercícios reais carregados e o teste dos 10 s passa.
 

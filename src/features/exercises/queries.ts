@@ -9,8 +9,8 @@ import type { ExerciseListItem, ExerciseRow } from "./types";
 
 // Leituras da biblioteca. Ler cookies ⇒ chamar só dentro de um <Suspense>.
 
-const LIST_COLUMNS = "id, name, tags, duration_min, min_players, max_players, is_archived";
-const DETAIL_COLUMNS = `${LIST_COLUMNS}, team_id, description, objectives, space, equipment, organization, rules, variants, coaching_points, image_path`;
+const LIST_COLUMNS = "id, name, tags, duration_min, series, min_players, is_archived, diagram";
+const DETAIL_COLUMNS = `${LIST_COLUMNS}, team_id, description, objectives, success_criteria, rest_seconds, space, equipment, rules, variants, image_path`;
 
 /** Exercícios filtrados: texto (nome e descrição), etiquetas (qualquer uma) e arquivados. */
 export async function listExercises(filters: ExerciseFilters): Promise<ExerciseListItem[]> {
