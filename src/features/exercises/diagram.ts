@@ -64,8 +64,8 @@ const pieceSchema = z.object({
   kind: z.enum(PIECE_KINDS),
   x: coord,
   y: coord,
-  /** Só a baliza roda (0 ou 90 graus). */
-  r: z.union([z.literal(0), z.literal(90)]).optional(),
+  /** Ângulo em graus (0-359). Só a baliza roda. */
+  r: z.number().min(0).max(359).optional(),
 });
 
 const arrowSchema = z.object({

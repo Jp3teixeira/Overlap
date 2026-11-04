@@ -32,6 +32,17 @@ describe("diagramSchema", () => {
     expect(diagramSchema.parse(undefined)).toBeNull();
   });
 
+  it("a baliza aceita qualquer ângulo entre 0 e 359", () => {
+    const withGoal = (r: number) => ({
+      ...base(),
+      pieces: [{ id: "g", kind: "goal" as const, x: 10, y: 10, r }],
+    });
+    expect(diagramSchema.safeParse(withGoal(45)).success).toBe(true);
+    expect(diagramSchema.safeParse(withGoal(135)).success).toBe(true);
+    expect(diagramSchema.safeParse(withGoal(400)).success).toBe(false);
+    expect(diagramSchema.safeParse(withGoal(-1)).success).toBe(false);
+  });
+
   it("recusa peças desconhecidas, coordenadas fora de limites e excesso de peças", () => {
     const bad = base();
     expect(
