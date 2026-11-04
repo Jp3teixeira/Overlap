@@ -8,10 +8,13 @@ import { EmptyState } from "@/components/empty-state";
 import { GroupedList, ListRow } from "@/components/grouped-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { filtersToUrl, formatPlayers, type ExerciseFilters } from "../filters";
+import { LayoutGrid } from "lucide-react";
+import { formationLabel } from "../diagram";
+import { filtersToUrl, formatDuration, formatPlayers, type ExerciseFilters } from "../filters";
 import { EXERCISE_TAGS, TAG_LABEL, type ExerciseTag } from "../labels";
 import type { ExerciseListItem } from "../types";
 import { ExerciseSheet } from "./exercise-sheet";
+import { PitchDiagram } from "./pitch-diagram";
 
 /**
  * Biblioteca: pesquisa + etiquetas. Os filtros vivem no URL (a lista vem já filtrada do
@@ -123,15 +126,30 @@ export function ExerciseBrowser({
         <GroupedList>
           {exercises.map((e) => {
             const meta = [
+              formationLabel(e.diagram),
+              formatDuration(e.duration_min, e.series),
               e.tags.map((t) => TAG_LABEL[t]).join(", "),
-              e.duration_min ? `${e.duration_min} min` : "",
-              formatPlayers(e.min_players, e.max_players)
-                ? `${formatPlayers(e.min_players, e.max_players)} jog.`
-                : "",
+              formatPlayers(e.min_players) ? `${formatPlayers(e.min_players)} jog.` : "",
             ]
               .filter(Boolean)
               .join(" · ");
-            return <ListRow key={e.id} href={`/exercicios/${e.id}`} title={e.name} meta={meta} />;
+            return (
+              <ListRow
+                key={e.id}
+                href={`/exercicios/${e.id}`}
+                leading={
+                  <span className="bg-muted grid h-12 w-16 place-items-center overflow-hidden rounded-md">
+                    {e.diagram ? (
+                      <PitchDiagram diagram={e.diagram} className="h-12 w-16" aria-hidden />
+                    ) : (
+                      <LayoutGrid aria-hidden className="text-muted-foreground size-5" />
+                    )}
+                  </span>
+                }
+                title={e.name}
+                meta={meta}
+              />
+            );
           })}
         </GroupedList>
       )}

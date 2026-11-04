@@ -8,21 +8,28 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { runAction } from "@/lib/run-action";
 import { duplicateExercise, setExerciseArchived } from "../actions";
-import { formatPlayers } from "../filters";
+import { formationLabel } from "../diagram";
+import { formatDuration, formatPlayers, formatRest } from "../filters";
 import { TAG_LABEL } from "../labels";
 import type { ExerciseRow } from "../types";
 import { ExerciseSheet } from "./exercise-sheet";
+import { DiagramLegend, PitchDiagram } from "./pitch-diagram";
 
 const SECTIONS = [
-  { key: "description", label: "Descrição" },
+  { key: "description", label: "Como se joga" },
   { key: "objectives", label: "Objetivos" },
-  { key: "organization", label: "Organização" },
-  { key: "rules", label: "Regras" },
-  { key: "variants", label: "Variantes" },
-  { key: "coaching_points", label: "Pontos a corrigir" },
+  { key: "success_criteria", label: "Critérios de sucesso" },
 ] as const;
 
-/** Ficha do exercício: imagem em grande primeiro e só as secções que têm texto. */
+const EXTRAS = [
+  { key: "rules", label: "Regras" },
+  { key: "variants", label: "Variantes" },
+] as const;
+
+/**
+ * Ficha do exercício, feita para se perceber em 5 minutos: campo primeiro, depois os números
+ * (duração, descanso, jogadores, espaço, material) e os três textos que interessam.
+ */
 export function ExerciseDetail({
   exercise,
   canEdit,
@@ -36,14 +43,16 @@ export function ExerciseDetail({
   const [editing, setEditing] = useState(autoEdit && canEdit);
   const [pending, startTransition] = useTransition();
 
-  const facts = [
-    exercise.duration_min ? `${exercise.duration_min} min` : "",
-    formatPlayers(exercise.min_players, exercise.max_players)
-      ? `${formatPlayers(exercise.min_players, exercise.max_players)} jogadores`
-      : "",
-    exercise.space ?? "",
-    exercise.equipment ? `Material: ${exercise.equipment}` : "",
-  ].filter(Boolean);
+  const facts: { label: string; value: string; wide?: boolean }[] = [
+    { label: "Duração", value: formatDuration(exercise.duration_min, exercise.series) },
+    { label: "Descanso", value: formatRest(exercise.rest_seconds) },
+    { label: "Jogadores", value: formatPlayers(exercise.min_players) },
+    { label: "Espaço", value: exercise.space ?? "" },
+    { label: "Material", value: exercise.equipment ?? "", wide: true },
+  ].filter((f) => f.value);
+
+  const formation = formationLabel(exercise.diagram);
+  const extras = EXTRAS.filter((x) => exercise[x.key]?.trim());
 
   function duplicate() {
     startTransition(async () => {
@@ -61,6 +70,15 @@ export function ExerciseDetail({
       toast.success(exercise.is_archived ? "Exercício reativado" : "Exercício arquivado");
     });
   }
+
+  const photo = exercise.image_url && (
+    // eslint-disable-next-line @next/next/no-img-element -- URL assinado de curta duração
+    <img
+      src={exercise.image_url}
+      alt={`Foto do exercício: ${exercise.name}`}
+      className="border-border bg-card max-h-[70dvh] w-full rounded-lg border object-contain"
+    />
+  );
 
   return (
     <article>
@@ -86,42 +104,78 @@ export function ExerciseDetail({
         </p>
       )}
 
-      {exercise.image_url && (
-        // eslint-disable-next-line @next/next/no-img-element -- URL assinado de curta duração
-        <img
-          src={exercise.image_url}
-          alt={`Esquema: ${exercise.name}`}
-          className="border-border bg-card mb-4 max-h-[70dvh] w-full rounded-lg border object-contain"
-        />
-      )}
-
       <h1 className="text-[26px] leading-[30px] font-[650] tracking-tight">{exercise.name}</h1>
-      <ul className="mt-2 flex flex-wrap gap-1.5">
-        {exercise.tags.map((t) => (
-          <li
-            key={t}
-            className="border-border bg-card rounded-full border px-2.5 py-0.5 text-[13px] font-medium"
-          >
-            {TAG_LABEL[t]}
-          </li>
-        ))}
-      </ul>
-      {facts.length > 0 && (
-        <p className="text-muted-foreground mt-3 text-[15px]">{facts.join(" · ")}</p>
-      )}
+      <p className="text-muted-foreground mt-1 text-[15px]">
+        {[formation, exercise.tags.map((t) => TAG_LABEL[t]).join(", ")].filter(Boolean).join(" · ")}
+      </p>
 
-      <div className="mt-6 flex flex-col gap-5">
-        {SECTIONS.map(({ key, label }) =>
-          exercise[key]?.trim() ? (
-            <section key={key}>
-              <h2 className="text-muted-foreground mb-1 text-[13px] font-semibold tracking-wide uppercase">
-                {label}
-              </h2>
-              <p className="text-[17px] leading-[25px] whitespace-pre-wrap">{exercise[key]}</p>
-            </section>
-          ) : null,
-        )}
+      <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-8">
+        <div className="flex flex-col gap-3">
+          {exercise.diagram ? (
+            <>
+              <div className="border-border overflow-hidden rounded-lg border bg-[#3a8a4f]">
+                <PitchDiagram diagram={exercise.diagram} className="mx-auto max-h-[70dvh]" />
+              </div>
+              <DiagramLegend diagram={exercise.diagram} />
+            </>
+          ) : (
+            photo
+          )}
+        </div>
+
+        <div className="flex flex-col gap-5">
+          {facts.length > 0 && (
+            <dl className="bg-border border-border grid grid-cols-2 gap-px overflow-hidden rounded-lg border">
+              {facts.map((f) => (
+                <div key={f.label} className={`bg-card px-3 py-2.5 ${f.wide ? "col-span-2" : ""}`}>
+                  <dt className="text-muted-foreground text-[13px]">{f.label}</dt>
+                  <dd className="text-[17px] leading-6 font-semibold">{f.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+
+          {SECTIONS.map(({ key, label }) =>
+            exercise[key]?.trim() ? (
+              <section key={key}>
+                <h2 className="text-muted-foreground mb-1 text-[13px] font-semibold tracking-wide uppercase">
+                  {label}
+                </h2>
+                <p className="text-[17px] leading-[25px] whitespace-pre-wrap">{exercise[key]}</p>
+              </section>
+            ) : null,
+          )}
+
+          {extras.length > 0 && (
+            <details className="border-border rounded-lg border">
+              <summary className="flex min-h-11 cursor-pointer items-center px-3 text-[15px] font-medium">
+                Regras e variantes
+              </summary>
+              <div className="border-border flex flex-col gap-4 border-t px-3 py-3">
+                {extras.map(({ key, label }) => (
+                  <section key={key}>
+                    <h3 className="text-muted-foreground mb-1 text-[13px] font-semibold">
+                      {label}
+                    </h3>
+                    <p className="text-[17px] leading-[25px] whitespace-pre-wrap">
+                      {exercise[key]}
+                    </p>
+                  </section>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
       </div>
+
+      {exercise.diagram && photo && (
+        <section className="mt-6">
+          <h2 className="text-muted-foreground mb-1.5 text-[13px] font-semibold tracking-wide uppercase">
+            Foto
+          </h2>
+          {photo}
+        </section>
+      )}
 
       {canEdit && (
         <div className="border-border mt-8 flex flex-wrap gap-2 border-t pt-4">

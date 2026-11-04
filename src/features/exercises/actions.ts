@@ -58,7 +58,7 @@ export async function duplicateExercise(id: string): Promise<ActionResult<{ id: 
   const { data: original, error: readError } = await supabase
     .from("exercises")
     .select(
-      "name, tags, description, objectives, min_players, max_players, duration_min, space, equipment, organization, rules, variants, coaching_points",
+      "name, tags, description, objectives, success_criteria, min_players, duration_min, series, rest_seconds, space, equipment, rules, variants, diagram",
     )
     .eq("id", id)
     .eq("team_id", team.id)

@@ -24,16 +24,16 @@ erDiagram
   matches |o--o{ player_observations : "contexto de"
 ```
 
-| Tabela | O que guarda | Notas |
-|---|---|---|
-| `teams` | Espaço de trabalho da equipa técnica | Persiste entre épocas |
-| `team_members` | Quem tem acesso e com que papel | Gerida só pelo dashboard |
-| `players` | Ficha do jogador | `is_active = false` para arquivar |
-| `player_observations` | Texto livre sobre um jogador | Ligação opcional a um treino ou jogo |
-| `exercises` | Biblioteca | `tags` é um array de enum; arquiva-se, não se apaga |
-| `training_sessions` | Um treino | `status`: planeado, realizado ou cancelado |
-| `training_session_exercises` | Itens ordenados de um treino | Da biblioteca ou livres |
-| `matches` | Jogo + resultado + análise | Resultado `null` = ainda não jogado |
+| Tabela                       | O que guarda                         | Notas                                                                                                                                                                                                                              |
+| ---------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `teams`                      | Espaço de trabalho da equipa técnica | Persiste entre épocas                                                                                                                                                                                                              |
+| `team_members`               | Quem tem acesso e com que papel      | Gerida só pelo dashboard                                                                                                                                                                                                           |
+| `players`                    | Ficha do jogador                     | `is_active = false` para arquivar                                                                                                                                                                                                  |
+| `player_observations`        | Texto livre sobre um jogador         | Ligação opcional a um treino ou jogo                                                                                                                                                                                               |
+| `exercises`                  | Biblioteca                           | `tags` é um array de enum; arquiva-se, não se apaga. `diagram` (jsonb) guarda o campo desenhado; `series`, `rest_seconds` e `success_criteria` vieram na 0002. `max_players`, `organization` e `coaching_points` já não são usados |
+| `training_sessions`          | Um treino                            | `status`: planeado, realizado ou cancelado                                                                                                                                                                                         |
+| `training_session_exercises` | Itens ordenados de um treino         | Da biblioteca ou livres                                                                                                                                                                                                            |
+| `matches`                    | Jogo + resultado + análise           | Resultado `null` = ainda não jogado                                                                                                                                                                                                |
 
 ## Decisões de modelação (e os problemas que evitam)
 
@@ -68,12 +68,12 @@ Há duas funções de autorização, ambas `security definer` para não haver re
 - `is_team_member(team_id)`: o utilizador pertence à equipa.
 - `can_edit_team(team_id)`: pertence à equipa com papel `owner` ou `coach`.
 
-| Papel | Ler | Criar / editar / apagar |
-|---|---|---|
-| `owner`, `coach` | ✓ | ✓ |
-| `staff` (futuro Sr. Fernando) | ✓ | ✗ |
-| Autenticado sem equipa | ✗ | ✗ |
-| Anónimo | ✗ (sem permissões) | ✗ |
+| Papel                         | Ler                | Criar / editar / apagar |
+| ----------------------------- | ------------------ | ----------------------- |
+| `owner`, `coach`              | ✓                  | ✓                       |
+| `staff` (futuro Sr. Fernando) | ✓                  | ✗                       |
+| Autenticado sem equipa        | ✗                  | ✗                       |
+| Anónimo                       | ✗ (sem permissões) | ✗                       |
 
 Regras extra:
 

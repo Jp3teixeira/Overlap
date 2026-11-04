@@ -10,40 +10,44 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { runAction } from "@/lib/run-action";
 import { createExercise, updateExercise } from "../actions";
+import { isDiagramEmpty, type Diagram } from "../diagram";
 import { tagOptions, type ExerciseTag } from "../labels";
 import type { ExerciseRow } from "../types";
+import { DiagramEditor } from "./diagram-editor";
 import { ImageField } from "./image-field";
 
 type Values = {
   name: string;
   tags: ExerciseTag[];
-  description: string;
-  objectives: string;
-  min_players: string;
-  max_players: string;
+  diagram: Diagram | null;
   duration_min: string;
+  series: string;
+  rest_seconds: string;
+  min_players: string;
   space: string;
   equipment: string;
-  organization: string;
+  description: string;
+  objectives: string;
+  success_criteria: string;
   rules: string;
   variants: string;
-  coaching_points: string;
 };
 
 const EMPTY: Values = {
   name: "",
   tags: [],
-  description: "",
-  objectives: "",
-  min_players: "",
-  max_players: "",
+  diagram: null,
   duration_min: "",
+  series: "",
+  rest_seconds: "",
+  min_players: "",
   space: "",
   equipment: "",
-  organization: "",
+  description: "",
+  objectives: "",
+  success_criteria: "",
   rules: "",
   variants: "",
-  coaching_points: "",
 };
 
 const num = (n: number | null) => (n === null ? "" : String(n));
@@ -52,33 +56,23 @@ function fromExercise(e: ExerciseRow): Values {
   return {
     name: e.name,
     tags: e.tags,
-    description: e.description ?? "",
-    objectives: e.objectives ?? "",
-    min_players: num(e.min_players),
-    max_players: num(e.max_players),
+    diagram: e.diagram,
     duration_min: num(e.duration_min),
+    series: num(e.series),
+    rest_seconds: num(e.rest_seconds),
+    min_players: num(e.min_players),
     space: e.space ?? "",
     equipment: e.equipment ?? "",
-    organization: e.organization ?? "",
+    description: e.description ?? "",
+    objectives: e.objectives ?? "",
+    success_criteria: e.success_criteria ?? "",
     rules: e.rules ?? "",
     variants: e.variants ?? "",
-    coaching_points: e.coaching_points ?? "",
   };
 }
 
-const DETAIL_KEYS = [
-  "description",
-  "objectives",
-  "min_players",
-  "max_players",
-  "duration_min",
-  "space",
-  "equipment",
-  "organization",
-  "rules",
-  "variants",
-  "coaching_points",
-] as const;
+/** Campos que ficam recolhidos em "Mais detalhes". */
+const DETAIL_KEYS = ["rules", "variants"] as const;
 
 type Props = {
   open: boolean;
@@ -115,9 +109,10 @@ export function ExerciseSheet({ open, onOpenChange, exercise }: Props) {
   function save() {
     startTransition(async () => {
       // Envia sempre todos os campos: o schema repõe a null o que faltar.
+      const input = { ...values, diagram: isDiagramEmpty(values.diagram) ? null : values.diagram };
       const result = exercise
-        ? await runAction<unknown>(() => updateExercise(exercise.id, values))
-        : await runAction<{ id: string }>(() => createExercise(values));
+        ? await runAction<unknown>(() => updateExercise(exercise.id, input))
+        : await runAction<{ id: string }>(() => createExercise(input));
       if (!result.ok) {
         const fe = result.fieldErrors ?? {};
         setErrors(fe);
@@ -132,7 +127,7 @@ export function ExerciseSheet({ open, onOpenChange, exercise }: Props) {
   }
 
   const text = (
-    key: Exclude<keyof Values, "tags" | "name">,
+    key: "description" | "objectives" | "success_criteria" | "rules" | "variants",
     label: string,
     placeholder: string,
     max = 2000,
@@ -188,6 +183,10 @@ export function ExerciseSheet({ open, onOpenChange, exercise }: Props) {
           />
         </Field>
 
+        <Field label="Campo" error={errors.diagram?.[0]}>
+          <DiagramEditor value={values.diagram} onChange={(d) => set("diagram", d)} />
+        </Field>
+
         <div className="grid grid-cols-3 gap-3">
           <Field label="Duração (min)" htmlFor="ex-duration" error={errors.duration_min?.[0]}>
             <Input
@@ -197,7 +196,26 @@ export function ExerciseSheet({ open, onOpenChange, exercise }: Props) {
               onChange={(e) => set("duration_min", e.target.value)}
             />
           </Field>
-          <Field label="Jog. mín." htmlFor="ex-min" error={errors.min_players?.[0]}>
+          <Field label="Séries" htmlFor="ex-series" error={errors.series?.[0]}>
+            <Input
+              id="ex-series"
+              inputMode="numeric"
+              value={values.series}
+              onChange={(e) => set("series", e.target.value)}
+            />
+          </Field>
+          <Field label="Descanso (s)" htmlFor="ex-rest" error={errors.rest_seconds?.[0]}>
+            <Input
+              id="ex-rest"
+              inputMode="numeric"
+              value={values.rest_seconds}
+              onChange={(e) => set("rest_seconds", e.target.value)}
+            />
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <Field label="Jogadores (mín.)" htmlFor="ex-min" error={errors.min_players?.[0]}>
             <Input
               id="ex-min"
               inputMode="numeric"
@@ -205,18 +223,40 @@ export function ExerciseSheet({ open, onOpenChange, exercise }: Props) {
               onChange={(e) => set("min_players", e.target.value)}
             />
           </Field>
-          <Field label="Jog. máx." htmlFor="ex-max" error={errors.max_players?.[0]}>
-            <Input
-              id="ex-max"
-              inputMode="numeric"
-              value={values.max_players}
-              onChange={(e) => set("max_players", e.target.value)}
-            />
-          </Field>
+          <div className="col-span-2">
+            <Field label="Espaço" htmlFor="ex-space" error={errors.space?.[0]}>
+              <Input
+                id="ex-space"
+                value={values.space}
+                onChange={(e) => set("space", e.target.value)}
+                placeholder="Ex.: 20x20 m"
+                maxLength={80}
+              />
+            </Field>
+          </div>
         </div>
 
+        <Field label="Material" htmlFor="ex-equipment" error={errors.equipment?.[0]}>
+          <Input
+            id="ex-equipment"
+            value={values.equipment}
+            onChange={(e) => set("equipment", e.target.value)}
+            placeholder="Ex.: 8 cones, 2 mini-balizas, coletes"
+            maxLength={300}
+          />
+        </Field>
+
+        {text("description", "Como se joga", "Descreve o exercício em poucas linhas")}
+        {text("objectives", "Objetivos", "O que queremos desenvolver?", 1000)}
+        {text(
+          "success_criteria",
+          "Critérios de sucesso",
+          "O que queremos ver quando corre bem?",
+          1000,
+        )}
+
         {exercise ? (
-          <Field label="Esquema ou foto">
+          <Field label="Foto do quadro ou esquema">
             <ImageField
               exerciseId={exercise.id}
               teamId={exercise.team_id}
@@ -225,7 +265,7 @@ export function ExerciseSheet({ open, onOpenChange, exercise }: Props) {
           </Field>
         ) : (
           <p className="text-muted-foreground -mt-2 text-[13px]">
-            Depois de guardar, podes juntar um esquema ou uma foto.
+            Depois de guardar, podes juntar uma foto do quadro ou de um esquema.
           </p>
         )}
 
@@ -240,30 +280,8 @@ export function ExerciseSheet({ open, onOpenChange, exercise }: Props) {
 
         {details && (
           <>
-            {text("description", "Descrição", "Em que consiste o exercício?")}
-            {text("objectives", "Objetivos", "O que queremos desenvolver?", 1000)}
-            <Field label="Espaço" htmlFor="ex-space" error={errors.space?.[0]}>
-              <Input
-                id="ex-space"
-                value={values.space}
-                onChange={(e) => set("space", e.target.value)}
-                placeholder="Ex.: 20x15 m"
-                maxLength={80}
-              />
-            </Field>
-            <Field label="Material" htmlFor="ex-equipment" error={errors.equipment?.[0]}>
-              <Input
-                id="ex-equipment"
-                value={values.equipment}
-                onChange={(e) => set("equipment", e.target.value)}
-                placeholder="Ex.: 8 cones, 2 balizas, coletes"
-                maxLength={300}
-              />
-            </Field>
-            {text("organization", "Organização", "Como se monta e como decorre?")}
             {text("rules", "Regras", "Regras e pontuação")}
             {text("variants", "Variantes", "Como tornar mais fácil ou mais difícil?")}
-            {text("coaching_points", "Pontos a corrigir", "No que insistir durante o exercício")}
           </>
         )}
         <button type="submit" hidden aria-hidden tabIndex={-1} />
