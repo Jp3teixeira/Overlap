@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDayLong, formatDayShort, formatTime, seasonOf, todayISO } from "./dates";
+import { addDays, formatDayLong, formatDayShort, formatTime, seasonOf, todayISO } from "./dates";
 
 describe("dates", () => {
   it("formatDayShort em pt-PT sem pontos", () => {
@@ -25,5 +25,12 @@ describe("dates", () => {
   it("formatTime corta os segundos", () => {
     expect(formatTime("19:15:00")).toBe("19:15");
     expect(formatTime(null)).toBe("");
+  });
+
+  it("addDays soma dias, passa de mês e de ano, e aceita negativos", () => {
+    expect(addDays("2026-11-08", 7)).toBe("2026-11-15");
+    expect(addDays("2026-11-28", 7)).toBe("2026-12-05");
+    expect(addDays("2026-12-28", 7)).toBe("2027-01-04");
+    expect(addDays("2026-03-01", -1)).toBe("2026-02-28");
   });
 });

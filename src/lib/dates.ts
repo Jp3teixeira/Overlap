@@ -32,6 +32,13 @@ function parseISODate(iso: string): Date {
   return new Date(Date.UTC(y, m - 1, d));
 }
 
+/** Soma (ou subtrai) dias a uma data ISO: ("2026-11-08", 7) → "2026-11-15". */
+export function addDays(iso: string, days: number): string {
+  const date = parseISODate(iso);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
 /** "qua, 4 nov" */
 export function formatDayShort(iso: string): string {
   const date = parseISODate(iso);
