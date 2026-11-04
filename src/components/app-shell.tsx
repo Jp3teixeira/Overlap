@@ -3,6 +3,7 @@ import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { signOut } from "@/features/auth/actions";
 import { OverlapMark } from "./overlap-mark";
+import { ThemeToggle } from "./theme-toggle";
 import { ActiveNavLinks, NavLinks } from "./app-nav";
 
 /** Estrutura da app: barra lateral no desktop, barra inferior no mobile. */
@@ -21,7 +22,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Suspense fallback={<NavLinks variant="sidebar" pathname={null} />}>
           <ActiveNavLinks variant="sidebar" />
         </Suspense>
-        <form action={signOut} className="mt-auto">
+        <div className="mt-auto flex flex-col gap-1">
+          <ThemeToggle variant="row" />
+        </div>
+        <form action={signOut} className="mt-1">
           <button
             type="submit"
             className="text-sidebar-foreground/70 flex h-11 w-full items-center gap-3 rounded-lg px-3 text-[15px] font-medium hover:bg-white/5 hover:text-white"

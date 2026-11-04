@@ -10,7 +10,7 @@ O clube aparece na cor, não no logótipo. Nada de emblema espalhado, nada do es
 
 ## Cor
 
-Modo claro por defeito (legível ao sol). O modo escuro fica para depois do MVP, já com tokens.
+Modo claro por defeito (legível ao sol) e modo escuro "soft" (azul-noite, sem preto puro). A preferência é Automático (segue o telemóvel), Claro ou Escuro, num botão no Início (mobile) e na barra lateral (desktop). Guarda-se no `localStorage` e o `<html data-theme>` é definido por um script no `<head>` antes da primeira pintura (`src/lib/theme.ts`). Os tokens escuros estão em `globals.css` (`:root[data-theme="dark"]`); componentes novos usam sempre tokens, nunca cores fixas.
 
 | Token | Hex | Uso |
 |---|---|---|

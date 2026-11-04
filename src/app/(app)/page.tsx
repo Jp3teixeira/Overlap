@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { CalendarDays, ClipboardList, MessageSquarePlus } from "lucide-react";
 import { OverlapMark } from "@/components/overlap-mark";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { TimeBar } from "@/components/time-bar";
 import { EmptyState } from "@/components/empty-state";
 import { GroupedList, ListRow } from "@/components/grouped-list";
@@ -40,11 +41,14 @@ export default function HomePage() {
           <OverlapMark className="text-primary h-5 w-8" />
           Overlap
         </h1>
-        <form action={signOut} className="lg:hidden">
-          <Button type="submit" variant="ghost" size="sm" className="text-muted-foreground">
-            Sair
-          </Button>
-        </form>
+        <div className="-mr-2 flex items-center lg:hidden">
+          <ThemeToggle variant="icon" />
+          <form action={signOut}>
+            <Button type="submit" variant="ghost" size="sm" className="text-muted-foreground">
+              Sair
+            </Button>
+          </form>
+        </div>
         <h1 className="hidden text-[26px] leading-[30px] font-[650] tracking-tight lg:block">
           Início
         </h1>
