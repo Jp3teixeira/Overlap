@@ -103,23 +103,23 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
 
 **Objetivo:** registar observações de verdade a partir do próximo treino. Rever este código com mais calma do que os outros, porque é o padrão que a IA vai copiar.
 
-- [ ] **2.1 Camada de dados de `players`** — `schemas.ts`, `labels.ts` e testes já feitos; falta `queries.ts` e `actions.ts`
+- [x] **2.1 Camada de dados de `players`** — falta testar com o projeto real
   - `schemas.ts`: create e update.
   - `queries.ts`: `listPlayers({ includeArchived })` e `getPlayer(id)`.
   - `actions.ts`: `createPlayer`, `updatePlayer`, `archivePlayer`.
   - `labels.ts` para posições e pé.
   - Testes dos schemas.
-- [ ] **2.2 `/plantel`**
+- [x] **2.2 `/plantel`**
   - Lista agrupada com avatar (número em navy), nome e posições.
   - Pesquisa por nome. Arquivados escondidos, com um toggle "Mostrar arquivados".
   - Botão "+" em baixo.
-- [ ] **2.3 Criar/editar jogador** num `ResponsiveSheet`.
+- [x] **2.3 Criar/editar jogador** num `ResponsiveSheet`.
   - Nome (obrigatório), número, ano, posições (chips múltiplos), pé (segmentado), foco atual.
-- [ ] **2.4 `/plantel/[id]`**
+- [x] **2.4 `/plantel/[id]`**
   - Ficha compacta com o foco atual editável no sítio.
   - Cronologia de observações (data, autor, contexto treino/jogo), mais recente primeiro.
   - Menu ⋯ com Editar e Arquivar.
-- [ ] **2.5 Camada de dados de `observations`** (schema já feito) (schemas, queries por jogador, create/update/delete) + **`QuickObservation`**.
+- [x] **2.5 Camada de dados de `observations`** — falta cronometrar os 30 s no telemóvel (schemas, queries por jogador, create/update/delete) + **`QuickObservation`**.
   - Fluxo: escolher jogador numa grelha de números e nomes → textarea com autofocus → Guardar.
   - O botão "Guardar e outro" mantém o sheet aberto para o jogador seguinte.
   - Se houver um `training_session` ou `match` com a data de hoje, liga-o automaticamente (chip removível).

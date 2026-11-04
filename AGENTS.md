@@ -33,7 +33,7 @@ App web privada para a equipa técnica do Candal Sub-11 (2 treinadores):
   Para acrescentar um componente: `npx shadcn@latest add <nome>` no teu PC e ajustar aos tokens.
 - **Fonte:** Archivo variável, self-hosted em `src/fonts` (`next/font/local`). Sem pedidos ao Google.
 - **Supabase** (Postgres, Auth, Storage) via `@supabase/ssr`.
-- **Zod** para validação; **react-hook-form** + `@hookform/resolvers/zod` nos formulários.
+- **Zod** para validação. Formulários com estado local (`useState`) e erros por campo vindos do `ActionResult` (ver `src/features/players/components/player-sheet.tsx`). Sem react-hook-form até um formulário o justificar.
 - **Vitest** para testes unitários.
 - **Vercel** (deploy) e **GitHub** (repo privado).
 
@@ -91,7 +91,7 @@ docs/
 2. `createClient()` do servidor
 3. confirmar o utilizador: `getUser()`/`getClaims()`, conforme o guia oficial do `@supabase/ssr`. O proxy sozinho não protege Server Actions.
 4. a query
-5. `revalidatePath(...)`
+5. `refresh()` de `next/cache` (os dados não estão em cache, basta refrescar o router)
 6. devolver um `ActionResult`
 
 ```ts

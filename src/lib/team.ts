@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -40,16 +41,17 @@ export function toCurrentTeam(row: unknown, userId: string): CurrentTeam | null 
 }
 
 /** Id do utilizador autenticado (verificado). Sem sessão → /login. */
-export async function getUserId(): Promise<string> {
+export const getUserId = cache(async function getUserId(): Promise<string> {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const sub = data?.claims?.sub;
   if (!sub) redirect("/login");
   return sub;
-}
+});
 
 /** Equipa do utilizador. Sem sessão → /login. Sem equipa → /sem-acesso. */
-export async function getCurrentTeam(): Promise<CurrentTeam> {
+/** Memorizado por pedido (React cache): pode ser chamado em vários sítios sem repetir queries. */
+export const getCurrentTeam = cache(async function getCurrentTeam(): Promise<CurrentTeam> {
   const userId = await getUserId();
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -64,4 +66,4 @@ export async function getCurrentTeam(): Promise<CurrentTeam> {
   const team = data ? toCurrentTeam(data, userId) : null;
   if (!team) redirect("/sem-acesso");
   return team;
-}
+});

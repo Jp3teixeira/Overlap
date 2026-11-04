@@ -18,6 +18,48 @@ import { venueOptions, type MatchVenue } from "@/features/matches/labels";
 import { formatPositions, positionOptions, type PlayerPosition } from "@/features/players/labels";
 import { tagOptions, type ExerciseTag } from "@/features/exercises/labels";
 import { formatDayShort } from "@/lib/dates";
+import { QuickObservation } from "@/features/observations/components/quick-observation";
+import { ObservationTimeline } from "@/features/observations/components/observation-timeline";
+import { FocusEditor } from "@/features/players/components/focus-editor";
+import { PlayerHeader } from "@/features/players/components/player-header";
+import { PlayerSheet } from "@/features/players/components/player-sheet";
+import type { PlayerRow } from "@/features/players/types";
+
+// Dados inventados para a F2 (guardar falha de propósito: aqui não há Supabase).
+const DEMO_PLAYERS = [1, 4, 5, 7, 8, 9, 10, 11, 14].map((n) => ({
+  id: `demo-${n}`,
+  name: `Jogador ${n}`,
+  shirt_number: n,
+}));
+const DEMO_PLAYER: PlayerRow = {
+  id: "demo-7",
+  name: "Jogador Sete",
+  shirt_number: 7,
+  birth_year: 2016,
+  positions: ["extremo", "medio"],
+  dominant_foot: "direito",
+  current_focus: "Receber de costas e rodar",
+  photo_path: null,
+  is_active: true,
+};
+const DEMO_OBS = [
+  {
+    id: "o1",
+    body: "Boa intensidade no exercício de 1x1. Continua com dificuldades na tomada de decisão quando recebe de costas.",
+    observed_on: "2026-11-03",
+    authorName: "Tiago",
+    context: "no treino",
+    isMine: false,
+  },
+  {
+    id: "o2",
+    body: "Pressão alta muito boa na primeira parte.",
+    observed_on: "2026-11-01",
+    authorName: "João",
+    context: "vs Adversário B",
+    isMine: true,
+  },
+];
 
 // Dados inventados — nunca dados reais de jogadores.
 const ITEMS_START = [
@@ -34,6 +76,8 @@ export function Playground() {
   const [tags, setTags] = useState<ExerciseTag[]>(["duelo_1x1"]);
   const [venue, setVenue] = useState<MatchVenue>("casa");
   const [open, setOpen] = useState(false);
+  const [obsOpen, setObsOpen] = useState(false);
+  const [newPlayer, setNewPlayer] = useState(false);
 
   const setMinutes = (id: string, duration_min: number) =>
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, duration_min } : i)));
@@ -45,6 +89,29 @@ export function Playground() {
         subtitle="Página temporária para validar o visual no telemóvel. Dados inventados."
         back={{ href: "/", label: "Início" }}
       />
+
+      <section className="border-border rounded-lg border border-dashed p-4">
+        <p className="text-muted-foreground mb-4 text-[13px]">
+          F2 com dados inventados. Guardar falha aqui (não há Supabase); na app real funciona.
+        </p>
+        <PlayerHeader player={DEMO_PLAYER} canEdit />
+        <FocusEditor playerId={DEMO_PLAYER.id} focus={DEMO_PLAYER.current_focus} canEdit />
+        <SectionTitle>Observações</SectionTitle>
+        <ObservationTimeline items={DEMO_OBS} />
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <Button onClick={() => setObsOpen(true)}>Observação rápida</Button>
+          <Button variant="outline" onClick={() => setNewPlayer(true)}>
+            Novo jogador
+          </Button>
+        </div>
+        <QuickObservation
+          open={obsOpen}
+          onOpenChange={setObsOpen}
+          players={DEMO_PLAYERS}
+          context={{ sessionId: "demo-session", match: null }}
+        />
+        <PlayerSheet open={newPlayer} onOpenChange={setNewPlayer} />
+      </section>
 
       <section>
         <SectionTitle>Treino</SectionTitle>
