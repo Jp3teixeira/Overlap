@@ -138,12 +138,14 @@ function Pitch({ field, k }: { field: FieldType; k: number }) {
 }
 
 const LINE_BLUE = "#bfe3ff";
+/** Setas quase pretas: o branco já é das linhas do campo, e o escuro lê-se melhor ao sol. */
+const ARROW = "#0b1220";
 
 function ArrowShape({ arrow, k, selected }: { arrow: Arrow; k: number; selected: boolean }) {
   const g = arrowGeometry(arrow, k);
   if (!g) return null;
   const isLine = arrow.kind === "line";
-  const color = isLine ? LINE_BLUE : LINE;
+  const color = isLine ? LINE_BLUE : ARROW;
   const width = (arrow.kind === "shot" ? 5 : 3) * k;
   const dash =
     arrow.kind === "pass" ? `${9 * k} ${7 * k}` : isLine ? `${12 * k} ${8 * k}` : undefined;
@@ -378,7 +380,7 @@ export function PieceDot({ kind }: { kind: PieceKind }) {
 export function ArrowSwatch({ kind }: { kind: ArrowKind }) {
   const g = arrowGeometry({ kind, x1: 2, y1: 12, x2: 22, y2: 12 }, 0.45);
   if (!g) return null;
-  const color = kind === "line" ? LINE_BLUE : "#fff";
+  const color = kind === "line" ? LINE_BLUE : ARROW;
   return (
     <svg viewBox="0 0 24 24" className="size-6" aria-hidden>
       <path

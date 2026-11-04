@@ -64,10 +64,10 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - Adicionar os componentes: button, input, textarea, label, drawer, dialog, dropdown-menu, sonner, skeleton, badge, toggle-group.
   - Página temporária `/dev/ui` com botão, input, uma lista agrupada e chips, para validar o visual no telemóvel.
   - _Concluído:_ o `/dev/ui` no telemóvel parece "Overlap", não shadcn por defeito.
-- [ ] **0.4 Supabase** — seguir "Arranque" do `docs/DATABASE.md`.
+- [x] **0.4 Supabase** — seguir "Arranque" do `docs/DATABASE.md`.
   - _Concluído:_ o `rls_smoke.sql` dá 3 × PASS.
-- [ ] **0.5 Tipos** — `supabase login` e o script `db:types`, que gera `src/types/database.ts`. Fazer commit dos tipos.
-- [ ] **0.6 Vercel**
+- [x] **0.5 Tipos** — decidido: os tipos são escritos à mão (`features/*/types.ts`), não há `database.ts` gerado. — `supabase login` e o script `db:types`, que gera `src/types/database.ts`. Fazer commit dos tipos.
+- [x] **0.6 Vercel** — em produção
   - Importar o repo.
   - Env vars: `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (a chave publishable; em projetos antigos chama-se "anon").
   - _Concluído:_ o URL de produção abre no telemóvel.
@@ -132,7 +132,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - Upload para `{team_id}/players/{player_id}/{uuid}.webp` e atualizar `photo_path` (apagar a antiga).
   - Mostrar com URL assinado. Opção "Remover foto".
   - Helpers em `src/lib/storage.ts`, para reutilizar na 4.5.
-- [x] **2.7 Backup semanal** — workflow feito e restauro testado localmente; faltam os 2 secrets e a primeira execução
+- [x] **2.7 Backup semanal** — secrets criados e primeira execução OK (2026-11-04). O `pg_dump` passou a correr numa imagem Docker (o download do cliente falhava); correr o workflow mais uma vez à mão e decifrar um artifact real para confirmar o restauro.
   - `.github/workflows/backup.yml` com cron ao domingo de madrugada.
   - `pg_dump` (versão igual à do projeto) pela connection string do Session pooler (secret `SUPABASE_DB_URL`).
   - Cifrar com `gpg --symmetric --batch --passphrase` (secret `BACKUP_PASSPHRASE`).
@@ -219,7 +219,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
 
 ## F6 — Início + app instalável → MVP em uso
 
-- [ ] **6.1 Início**
+- [x] **6.1 Início**
   - Próximo treino (com `TimeBar`), próximo jogo (com contagem "2d 17h") e último resultado (feito).
   - 3 ações rápidas: Observação, Novo treino, Registar jogo.
   - Mais nada.
@@ -234,7 +234,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - `grep` por `service_role`/`sb_secret` no repo devolve zero.
   - O `rls_smoke` passa.
   - Nenhum dado real no git (`git log -p | grep` por nomes de jogadores).
-- [ ] **6.5 README.md** curto para o portefólio: o que é, screenshots, stack, decisões de segurança (RLS e FKs compostas), como correr.
+- [x] **6.5 README.md** curto para o portefólio: o que é, screenshots, stack, decisões de segurança (RLS e FKs compostas), como correr.
 
 **MVP em uso.** Depois, 3–4 semanas a usar sem mexer em código. Só então se decide o que vem a seguir.
 
