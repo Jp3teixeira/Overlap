@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { venueOptions, type MatchVenue } from "@/features/matches/labels";
-import { formatPositions, positionOptions, type PlayerPosition } from "@/features/players/labels";
+import { formatPositions, positionChoices, type PlayerPosition } from "@/features/players/labels";
 import { tagOptions, type ExerciseTag } from "@/features/exercises/labels";
 import { formatDayShort } from "@/lib/dates";
 import { QuickObservation } from "@/features/observations/components/quick-observation";
@@ -24,6 +24,10 @@ import { FocusEditor } from "@/features/players/components/focus-editor";
 import { PlayerHeader } from "@/features/players/components/player-header";
 import { PlayerSheet } from "@/features/players/components/player-sheet";
 import type { PlayerRow } from "@/features/players/types";
+import { AnalysisEditor } from "@/features/matches/components/analysis-editor";
+import { MatchHeader } from "@/features/matches/components/match-header";
+import { MatchList } from "@/features/matches/components/match-list";
+import type { MatchListItem, MatchRow } from "@/features/matches/types";
 
 // Dados inventados para a F2 (guardar falha de propósito: aqui não há Supabase).
 const DEMO_PLAYERS = [1, 4, 5, 7, 8, 9, 10, 11, 14].map((n) => ({
@@ -33,6 +37,7 @@ const DEMO_PLAYERS = [1, 4, 5, 7, 8, 9, 10, 11, 14].map((n) => ({
 }));
 const DEMO_PLAYER: PlayerRow = {
   id: "demo-7",
+  team_id: "demo-team",
   name: "Jogador Sete",
   shirt_number: 7,
   birth_year: 2016,
@@ -40,7 +45,74 @@ const DEMO_PLAYER: PlayerRow = {
   dominant_foot: "direito",
   current_focus: "Receber de costas e rodar",
   photo_path: null,
+  photo_url: null,
   is_active: true,
+};
+const DEMO_MATCHES: MatchListItem[] = [
+  {
+    id: "m1",
+    match_date: "2026-11-08",
+    kickoff_time: "11:00:00",
+    opponent: "FC Exemplo",
+    kind: "oficial",
+    competition: "Campeonato Distrital",
+    venue: "casa",
+    goals_for: null,
+    goals_against: null,
+  },
+  {
+    id: "m2",
+    match_date: "2026-11-15",
+    kickoff_time: null,
+    opponent: "UD Modelo",
+    kind: "oficial",
+    competition: "Campeonato Distrital",
+    venue: "fora",
+    goals_for: null,
+    goals_against: null,
+  },
+  {
+    id: "m3",
+    match_date: "2026-11-01",
+    kickoff_time: "10:30:00",
+    opponent: "AD Teste",
+    kind: "oficial",
+    competition: "Campeonato Distrital",
+    venue: "fora",
+    goals_for: 3,
+    goals_against: 1,
+  },
+  {
+    id: "m4",
+    match_date: "2026-10-25",
+    kickoff_time: "11:00:00",
+    opponent: "CF Demo",
+    kind: "particular",
+    competition: null,
+    venue: "casa",
+    goals_for: 1,
+    goals_against: 2,
+  },
+  {
+    id: "m5",
+    match_date: "2026-10-18",
+    kickoff_time: null,
+    opponent: "GD Ensaio",
+    kind: "oficial",
+    competition: "Campeonato Distrital",
+    venue: "casa",
+    goals_for: null,
+    goals_against: null,
+  },
+];
+const DEMO_MATCH: MatchRow = {
+  ...DEMO_MATCHES[2],
+  went_well: "Pressão alta e reação à perda.",
+  went_badly: "",
+  to_work_on: "Saída de bola sob pressão.",
+  notes: null,
+  zerozero_url: "https://www.zerozero.pt",
+  video_url: null,
 };
 const DEMO_OBS = [
   {
@@ -216,7 +288,7 @@ export function Playground() {
           <Label>Posições</Label>
           <ChipGroup
             aria-label="Posições"
-            options={positionOptions}
+            options={positionChoices()}
             value={positions}
             onChange={setPositions}
           />
@@ -241,6 +313,17 @@ export function Playground() {
             Testar erro
           </Button>
         </div>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <SectionTitle>F3 — Lista de jogos</SectionTitle>
+        <MatchList matches={DEMO_MATCHES} today="2026-11-04" canEdit />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <SectionTitle>F3 — Ficha do jogo</SectionTitle>
+        <MatchHeader match={DEMO_MATCH} today="2026-11-04" canEdit />
+        <AnalysisEditor match={DEMO_MATCH} canEdit />
       </section>
 
       <ResponsiveSheet

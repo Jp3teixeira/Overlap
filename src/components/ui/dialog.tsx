@@ -26,7 +26,7 @@ function DialogContent({
       >
         {children}
         <DialogPrimitive.Close
-          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring absolute top-4 right-4 rounded-md p-1 focus-visible:ring-2 focus-visible:outline-none"
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring absolute top-3 right-3 flex size-11 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:outline-none"
           aria-label="Fechar"
         >
           <X className="size-5" />

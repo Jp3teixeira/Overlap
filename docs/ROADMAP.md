@@ -125,7 +125,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - Se houver um `training_session` ou `match` com a data de hoje, liga-o automaticamente (chip removível).
   - Abre a partir da ficha (com o jogador já escolhido). Cada um edita e apaga as suas observações.
   - *Concluído:* observação em < 30 s, cronometrada no telemóvel.
-- [ ] **2.6 Foto do jogador** — antes disto, confirmar a autorização de imagem com o clube.
+- [x] **2.6 Foto do jogador** — feito; falta testar no telemóvel com a BD real. Antes de usar fotos reais, confirmar a autorização de imagem com o clube.
   - `input type=file accept="image/*"` (câmara ou galeria).
   - Redimensionar para 512 px WebP no browser.
   - Upload para `{team_id}/players/{player_id}/{uuid}.webp` e atualizar `photo_path` (apagar a antiga).
@@ -147,17 +147,17 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
 
 **Objetivo:** nenhuma jornada fica sem registo.
 
-- [ ] **3.1 Camada de dados de `matches`** (schemas, labels e testes já feitos), a copiar o padrão de `players`, mais testes dos schemas (resultado: os dois golos ou nenhum).
-- [ ] **3.2 `/jogos`**
+- [x] **3.1 Camada de dados de `matches`** (schemas, labels e testes já feitos), a copiar o padrão de `players`, mais testes dos schemas (resultado: os dois golos ou nenhum).
+- [x] **3.2 `/jogos`**
   - Separadores Próximos | Realizados.
   - Linha com data, adversário, casa/fora e `ResultBadge` + `3–1`. O próximo jogo tem o marcador gold.
-- [ ] **3.3 Criar/editar jogo** (sheet): data, hora, adversário, casa/fora, tipo, competição.
+- [x] **3.3 Criar/editar jogo** (sheet): data, hora, adversário, casa/fora, tipo, competição.
   - **"Adicionar vários":** formulário em linhas (data, adversário, casa/fora) para meter o calendário da época de uma vez.
-- [ ] **3.4 `/jogos/[id]`**
+- [x] **3.4 `/jogos/[id]`**
   - Cabeçalho com o resultado. "Registar resultado" abre um sheet com 2 steppers.
   - Análise em 3 blocos (Correu bem, Correu mal, O que trabalhar), editáveis, com "Guardar".
   - Links ZeroZero e vídeo (abrem num separador novo).
-- [ ] **3.5 Observações do jogo:** lista das observações ligadas + botão "Observação" (`QuickObservation` com o jogo já ligado).
+- [x] **3.5 Observações do jogo:** lista das observações ligadas + botão "Observação" (`QuickObservation` com o jogo já ligado).
 
 **Concluído quando:**
 - as 2 jornadas já jogadas e o resto do calendário estão registados;

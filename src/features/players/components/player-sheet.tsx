@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { runAction } from "@/lib/run-action";
 import { createPlayer, setPlayerActive, updatePlayer } from "../actions";
-import { footOptions, positionOptions, type DominantFoot, type PlayerPosition } from "../labels";
+import { footOptions, positionChoices, type DominantFoot, type PlayerPosition } from "../labels";
 import type { PlayerRow } from "../types";
+import { PhotoField } from "./photo-field";
 
 type Values = {
   name: string;
@@ -134,6 +135,12 @@ export function PlayerSheet({ open, onOpenChange, player }: PlayerSheetProps) {
           save(false);
         }}
       >
+        {player ? (
+          <Field label="Foto">
+            <PhotoField player={player} />
+          </Field>
+        ) : null}
+
         <Field label="Nome" htmlFor="player-name" error={errors.name?.[0]}>
           <Input
             id="player-name"
@@ -141,7 +148,6 @@ export function PlayerSheet({ open, onOpenChange, player }: PlayerSheetProps) {
             onChange={(e) => set("name", e.target.value)}
             placeholder="Como é chamado no campo"
             autoComplete="off"
-            autoFocus={!isEdit}
             aria-invalid={errors.name ? true : undefined}
           />
         </Field>
@@ -170,10 +176,14 @@ export function PlayerSheet({ open, onOpenChange, player }: PlayerSheetProps) {
           </Field>
         </div>
 
-        <Field label="Posições" error={errors.positions?.[0]}>
+        <Field
+          label="Posições"
+          error={errors.positions?.[0]}
+          hint="A primeira que escolheres é a principal: define onde aparece no plantel."
+        >
           <ChipGroup
             aria-label="Posições"
-            options={positionOptions}
+            options={positionChoices(values.positions)}
             value={values.positions}
             onChange={(v) => set("positions", v)}
           />

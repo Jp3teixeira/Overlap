@@ -32,6 +32,27 @@ function parseISODate(iso: string): Date {
   return new Date(Date.UTC(y, m - 1, d));
 }
 
+/** Soma (ou subtrai) dias a uma data ISO: ("2026-11-08", 7) → "2026-11-15". */
+export function addDays(iso: string, days: number): string {
+  const date = parseISODate(iso);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+/** Dias entre duas datas ISO (negativo se `iso` já passou). */
+export function daysBetween(today: string, iso: string): number {
+  return Math.round((parseISODate(iso).getTime() - parseISODate(today).getTime()) / 86_400_000);
+}
+
+/** "Hoje", "Amanhã", "Daqui a 5 dias". */
+export function formatCountdown(today: string, iso: string): string {
+  const days = daysBetween(today, iso);
+  if (days === 0) return "Hoje";
+  if (days === 1) return "Amanhã";
+  if (days > 1) return `Daqui a ${days} dias`;
+  return days === -1 ? "Ontem" : `Há ${-days} dias`;
+}
+
 /** "qua, 4 nov" */
 export function formatDayShort(iso: string): string {
   const date = parseISODate(iso);

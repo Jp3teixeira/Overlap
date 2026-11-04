@@ -30,6 +30,7 @@ export const matchBulkSchema = z
   .array(
     matchSchema.pick({
       match_date: true,
+      kickoff_time: true,
       opponent: true,
       venue: true,
       kind: true,
