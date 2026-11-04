@@ -10,7 +10,7 @@ O clube aparece na cor, não no logótipo. Nada de emblema espalhado, nada do es
 
 ## Cor
 
-Modo claro por defeito (legível ao sol). O modo escuro fica para depois do MVP, já com tokens.
+Modo claro por defeito (legível ao sol) e modo escuro "soft" (azul-noite, sem preto puro). A preferência é Automático (segue o telemóvel), Claro ou Escuro, num botão no Início (mobile) e na barra lateral (desktop). Guarda-se no `localStorage` e o `<html data-theme>` é definido por um script no `<head>` antes da primeira pintura (`src/lib/theme.ts`). Os tokens escuros estão em `globals.css` (`:root[data-theme="dark"]`); componentes novos usam sempre tokens, nunca cores fixas.
 
 | Token | Hex | Uso |
 |---|---|---|
@@ -92,6 +92,8 @@ A largura semi-condensada nos títulos dá um ar de desporto sem cair no cartaz.
 - **Sombras:** só em sheets, menus e toasts. Listas e páginas não têm sombra.
 - **Listas agrupadas em vez de cartões:** linhas dentro de um único contentor com borda e divisórias, como as Definições do iOS. Nada de grelhas de cartões soltos.
 - **Ícones:** Lucide, 20 px, traço 1.75. Nunca emojis como ícones.
+- **Navegação:** Início `House`, Plantel `Users`, Jogos `BallIcon` (bola feita à mão em `components/icons`, o Lucide não tem), Exercícios `TrafficCone`, Treinos `Timer`. O separador ativo leva uma pílula `secondary` atrás do ícone.
+- **Símbolo overlap:** `OverlapMark` (dois círculos que se cruzam). Só na barra lateral, no título do Início e nos estados vazios. O número da camisola gigante só aparece como marca de água na ficha do jogador.
 - **Alvos de toque:** pelo menos 44 × 44 px. A ação principal fica ao alcance do polegar (em baixo).
 - **Movimento:** só em resposta a ações (abrir um sheet, confirmar). Sem animações de entrada.
 

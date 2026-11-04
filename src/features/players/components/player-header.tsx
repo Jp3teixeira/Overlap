@@ -19,7 +19,15 @@ export function PlayerHeader({ player, canEdit }: { player: PlayerRow; canEdit: 
   ].filter(Boolean);
 
   return (
-    <header className="mb-6">
+    <header className="relative mb-6">
+      {player.shirt_number != null && (
+        <span
+          aria-hidden
+          className="text-primary/[0.06] pointer-events-none absolute -top-3 right-0 -z-10 text-[168px] leading-none font-[800] tracking-tighter [font-stretch:88%] tabular-nums select-none"
+        >
+          {player.shirt_number}
+        </span>
+      )}
       <div className="mb-2 flex items-center justify-between">
         <Link
           href="/plantel"

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Toaster } from "@/components/ui/sonner";
+import { themeScript } from "@/lib/theme";
 import "./globals.css";
 
 // Archivo variável (pesos 100–900, larguras 62–125%), servida a partir do próprio site.
@@ -22,7 +23,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#12306B",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#12306B" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b1220" },
+  ],
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -30,7 +34,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-PT" className={archivo.variable}>
+    <html lang="pt-PT" className={archivo.variable} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-dvh">
         {children}
         <Toaster />

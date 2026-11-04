@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { uuid } from "@/lib/schema-helpers";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentTeam } from "@/lib/team";
+import type { TimedItem } from "./minutes";
 import type {
   ItemExercise,
   SessionItemView,
@@ -183,7 +184,9 @@ export async function listSessionObservations(
 }
 
 /** Para o Início: o próximo treino planeado (hoje conta). */
-export async function getHomeSession(today: string): Promise<SessionListItem | null> {
+export async function getHomeSession(
+  today: string,
+): Promise<(SessionListItem & { items: TimedItem[] }) | null> {
   const team = await getCurrentTeam();
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -199,5 +202,18 @@ export async function getHomeSession(today: string): Promise<SessionListItem | n
   if (error) throw new Error(`getHomeSession: ${error.message}`);
   if (!data) return null;
   const row = data as ListRow;
-  return withTotals([row], await itemTotals(team.id, [row.id]))[0];
+  const { data: items, error: itemsError } = await supabase
+    .from("training_session_exercises")
+    .select("id, duration_min")
+    .eq("team_id", team.id)
+    .eq("session_id", row.id)
+    .order("position", { ascending: true });
+  if (itemsError) throw new Error(`getHomeSession items: ${itemsError.message}`);
+  const timed = (items ?? []) as TimedItem[];
+  return {
+    ...row,
+    total_min: timed.reduce((sum, i) => sum + i.duration_min, 0),
+    item_count: timed.length,
+    items: timed,
+  };
 }

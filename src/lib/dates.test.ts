@@ -3,6 +3,7 @@ import {
   addDays,
   daysBetween,
   formatCountdown,
+  formatTimeUntil,
   formatDayLong,
   formatDayShort,
   formatTime,
@@ -53,5 +54,27 @@ describe("dates", () => {
     expect(formatCountdown("2026-11-04", "2026-11-01")).toBe("Há 3 dias");
     // passa a mudança de hora (fim de outubro) sem erros de arredondamento
     expect(daysBetween("2026-10-24", "2026-10-31")).toBe(7);
+  });
+});
+
+describe("formatTimeUntil", () => {
+  // 4 nov 2026, 17:30 em Lisboa (WET, UTC+0)
+  const now = new Date("2026-11-04T17:30:00Z");
+  it("dias e horas", () => {
+    expect(formatTimeUntil("2026-11-07", "10:30:00", now)).toBe("2d 17h");
+  });
+  it("horas e minutos no próprio dia", () => {
+    expect(formatTimeUntil("2026-11-04", "22:50", now)).toBe("5h 20min");
+  });
+  it("só minutos", () => {
+    expect(formatTimeUntil("2026-11-04", "18:10", now)).toBe("40 min");
+  });
+  it("sem hora ou já passou → null", () => {
+    expect(formatTimeUntil("2026-11-07", null, now)).toBeNull();
+    expect(formatTimeUntil("2026-11-04", "17:00", now)).toBeNull();
+  });
+  it("usa a hora de Lisboa no verão (UTC+1)", () => {
+    const summer = new Date("2026-07-10T09:00:00Z"); // 10:00 em Lisboa
+    expect(formatTimeUntil("2026-07-10", "12:00", summer)).toBe("2h 0min");
   });
 });

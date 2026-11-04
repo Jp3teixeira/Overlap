@@ -14,7 +14,7 @@ Uma "sessão" são cerca de 2 h com o Claude Code. As estimativas são por alto,
 
 A ordem prioriza o que se perde se não for registado já: as observações e as jornadas. Os exercícios estão na vossa cabeça e não fogem.
 
-Ficam em stand-by até haver 3–4 semanas de uso real: objetivos coletivos, quadro tático/bolas paradas e modo escuro.
+Ficam em stand-by até haver 3–4 semanas de uso real: objetivos coletivos, quadro tático/bolas paradas.
 
 ---
 
@@ -220,7 +220,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
 ## F6 — Início + app instalável → MVP em uso
 
 - [ ] **6.1 Início**
-  - Próximo treino, próximo jogo e último resultado (feito); falta a `TimeBar` no próximo treino.
+  - Próximo treino (com `TimeBar`), próximo jogo (com contagem "2d 17h") e último resultado (feito).
   - 3 ações rápidas: Observação, Novo treino, Registar jogo.
   - Mais nada.
 - [x] **6.2 PWA**
@@ -244,5 +244,4 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
 
 - **Objetivos coletivos:** tabela `team_objectives` + ligações a exercícios e treinos. O objetivo nasce do "O que trabalhar" de um jogo.
 - **Quadro tático / bolas paradas:** campo em SVG, estado guardado em JSON (`jsonb`).
-- **Modo escuro:** os tokens já estão no `DESIGN.md`, falta a variante escura.
 - **Conta só de leitura para o Sr. Fernando:** já suportada pela base de dados (papel `staff`). Basta criar a conta e uma linha no `team_members`.

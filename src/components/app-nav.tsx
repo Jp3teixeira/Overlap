@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, CalendarDays, ClipboardList, House, Users } from "lucide-react";
+import { House, Timer, TrafficCone, Users } from "lucide-react";
+import { BallIcon } from "@/components/icons/ball-icon";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/", label: "Início", icon: House },
   { href: "/plantel", label: "Plantel", icon: Users },
-  { href: "/jogos", label: "Jogos", icon: CalendarDays },
-  { href: "/exercicios", label: "Exercícios", icon: BookOpen },
-  { href: "/treinos", label: "Treinos", icon: ClipboardList },
+  { href: "/jogos", label: "Jogos", icon: BallIcon },
+  { href: "/exercicios", label: "Exercícios", icon: TrafficCone },
+  { href: "/treinos", label: "Treinos", icon: Timer },
 ] as const;
 
 function isActive(pathname: string | null, href: string) {
@@ -62,7 +63,14 @@ export function NavLinks({ variant, pathname }: { variant: Variant; pathname: st
                 active ? "text-primary" : "text-muted-foreground",
               )}
             >
-              <Icon className="size-[22px]" strokeWidth={active ? 2.1 : 1.75} />
+              <span
+                className={cn(
+                  "flex h-7 w-14 items-center justify-center rounded-full transition-colors",
+                  active && "bg-secondary",
+                )}
+              >
+                <Icon className="size-[22px]" strokeWidth={active ? 2.1 : 1.75} />
+              </span>
               {label}
             </Link>
           </li>

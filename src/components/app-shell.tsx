@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { signOut } from "@/features/auth/actions";
+import { OverlapMark } from "./overlap-mark";
+import { ThemeToggle } from "./theme-toggle";
 import { ActiveNavLinks, NavLinks } from "./app-nav";
 
 /** Estrutura da app: barra lateral no desktop, barra inferior no mobile. */
@@ -12,14 +14,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="bg-sidebar text-sidebar-foreground fixed inset-y-0 left-0 hidden w-60 flex-col px-3 py-6 lg:flex">
         <Link
           href="/"
-          className="mb-8 px-3 text-[22px] font-[650] tracking-tight [font-stretch:88%]"
+          className="mb-8 flex items-center gap-2.5 px-3 text-[22px] font-[650] tracking-tight [font-stretch:88%]"
         >
+          <OverlapMark className="h-5 w-8" />
           Overlap
         </Link>
         <Suspense fallback={<NavLinks variant="sidebar" pathname={null} />}>
           <ActiveNavLinks variant="sidebar" />
         </Suspense>
-        <form action={signOut} className="mt-auto">
+        <div className="mt-auto flex flex-col gap-1">
+          <ThemeToggle variant="row" />
+        </div>
+        <form action={signOut} className="mt-1">
           <button
             type="submit"
             className="text-sidebar-foreground/70 flex h-11 w-full items-center gap-3 rounded-lg px-3 text-[15px] font-medium hover:bg-white/5 hover:text-white"
