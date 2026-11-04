@@ -1,0 +1,4 @@
+node_modules
+.next
+supabase/migrations
+package-lock.json
