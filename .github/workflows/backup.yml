@@ -34,29 +34,21 @@ jobs:
           test -n "$SUPABASE_DB_URL" || { echo "::error::Falta o secret SUPABASE_DB_URL"; exit 1; }
           test -n "$BACKUP_PASSPHRASE" || { echo "::error::Falta o secret BACKUP_PASSPHRASE"; exit 1; }
 
-      - name: Instalar pg_dump ${{ env.PG_MAJOR }}
-        run: |
-          sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -fsSo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
-            --retry 5 --retry-delay 3 --retry-all-errors \
-            https://www.postgresql.org/media/keys/ACCC4CF8.asc
-          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
-            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
-          sudo apt-get -o Acquire::Retries=5 update -qq
-          sudo apt-get -o Acquire::Retries=5 install -y -qq "postgresql-client-${PG_MAJOR}"
-
+      # O pg_dump corre dentro da imagem oficial do Postgres (espelho da AWS), em vez de
+      # instalar o cliente a partir do postgresql.org, que falha de vez em quando nos runners.
       - name: Fazer o dump
         run: |
           set -euo pipefail
-          PGDUMP="/usr/lib/postgresql/${PG_MAJOR}/bin/pg_dump"
           STAMP="$(date -u +%Y-%m-%d)"
           mkdir -p "backup-${STAMP}"
-          # Dados e schema da app
-          "$PGDUMP" "$SUPABASE_DB_URL" --schema=public --no-owner --no-privileges -Fc \
-            -f "backup-${STAMP}/public.dump"
-          # Contas (só dados), para os UUIDs dos membros baterem certo num restauro
-          "$PGDUMP" "$SUPABASE_DB_URL" --data-only --table=auth.users --no-owner -Fc \
-            -f "backup-${STAMP}/auth-users.dump"
+          docker run --rm -e SUPABASE_DB_URL -v "${PWD}/backup-${STAMP}:/out" \
+            "public.ecr.aws/docker/library/postgres:${PG_MAJOR}" sh -ec '
+              # Dados e schema da app
+              pg_dump "$SUPABASE_DB_URL" --schema=public --no-owner --no-privileges -Fc -f /out/public.dump
+              # Contas (só dados), para os UUIDs dos membros baterem certo num restauro
+              pg_dump "$SUPABASE_DB_URL" --data-only --table=auth.users --no-owner -Fc -f /out/auth-users.dump
+            '
+          sudo chown -R "$(id -u):$(id -g)" "backup-${STAMP}"
           tar -cf "backup-${STAMP}.tar" "backup-${STAMP}"
           gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" \
             --symmetric --cipher-algo AES256 -o "backup-${STAMP}.tar.gpg" "backup-${STAMP}.tar"
