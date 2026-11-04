@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SESSION_STATUSES } from "./labels";
 import {
   isoDate,
   optionalInt,
@@ -57,3 +58,12 @@ export const duplicateSessionSchema = z.object({
   source_id: uuid,
   session_date: isoDate,
 });
+
+/** Alterar um item já no treino: minutos e nota. */
+export const sessionItemUpdateSchema = z.object({
+  duration_min: requiredInt(1, 120, "Entre 1 e 120 minutos."),
+  notes: optionalText(500).default(null),
+});
+export type SessionItemUpdateInput = z.input<typeof sessionItemUpdateSchema>;
+
+export const sessionStatusSchema = z.enum(SESSION_STATUSES, { error: "Estado inválido." });

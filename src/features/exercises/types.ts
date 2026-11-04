@@ -9,6 +9,7 @@ export type ExerciseListItem = {
   tags: ExerciseTag[];
   duration_min: number | null;
   series: number | null;
+  rest_seconds: number | null;
   min_players: number | null;
   is_archived: boolean;
   diagram: Diagram | null;
@@ -19,7 +20,6 @@ export type ExerciseRow = ExerciseListItem & {
   description: string | null;
   objectives: string | null;
   success_criteria: string | null;
-  rest_seconds: number | null;
   space: string | null;
   equipment: string | null;
   rules: string | null;

@@ -3,6 +3,7 @@ import { ListSkeleton } from "@/components/list-skeleton";
 import { ExerciseDetail } from "@/features/exercises/components/exercise-detail";
 import { getExercise } from "@/features/exercises/queries";
 import { Skeleton } from "@/components/ui/skeleton";
+import { uuid } from "@/lib/schema-helpers";
 import { getCurrentTeam } from "@/lib/team";
 
 export default function ExercisePage({ params, searchParams }: PageProps<"/exercicios/[id]">) {
@@ -18,7 +19,9 @@ async function ExerciseData({
   searchParams,
 }: Pick<PageProps<"/exercicios/[id]">, "params" | "searchParams">) {
   const { id } = await params;
-  const { editar } = await searchParams;
+  const { editar, treino } = await searchParams;
+  // Vindo de um treino, a seta volta a esse treino (5.9).
+  const sessionId = typeof treino === "string" && uuid.safeParse(treino).success ? treino : null;
   const [exercise, team] = await Promise.all([getExercise(id), getCurrentTeam()]);
   return (
     <>
@@ -29,6 +32,7 @@ async function ExerciseData({
         exercise={exercise}
         canEdit={team.canEdit}
         autoEdit={editar === "1"}
+        back={sessionId ? { href: `/treinos/${sessionId}`, label: "Treino" } : undefined}
       />
     </>
   );
