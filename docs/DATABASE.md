@@ -33,7 +33,7 @@ erDiagram
 | `exercises`                  | Biblioteca                           | `tags` é um array de enum; arquiva-se, não se apaga. `diagram` (jsonb) guarda o campo desenhado; `series`, `rest_seconds` e `success_criteria` vieram na 0002. `max_players`, `organization` e `coaching_points` já não são usados |
 | `training_sessions`          | Um treino                            | `status`: planeado, realizado ou cancelado                                                                                                                                                                                         |
 | `training_session_exercises` | Itens ordenados de um treino         | Da biblioteca ou livres                                                                                                                                                                                                            |
-| `matches`                    | Jogo + resultado + análise           | Resultado `null` = ainda não jogado                                                                                                                                                                                                |
+| `matches`                    | Jogo + resultado + análise           | Resultado `null` = ainda não jogado. `live` (jsonb, migração 0003) guarda o jogo ao vivo: convocatória, onze inicial, substituições, relógio e contagens (validado por `liveSchema`); ao terminar, o resultado passa para `goals_for`/`goals_against`                                                                                                                                                                                                |
 
 ## Decisões de modelação (e os problemas que evitam)
 
@@ -59,7 +59,9 @@ erDiagram
 
 9. **Só o ano de nascimento,** nunca a data completa. Fica a idade sem dados a mais.
 
-10. **Ficaram de fora de propósito:** `MatchEvents`, objetivos e as tabelas do quadro tático. Entram com uma migração própria quando saírem do stand-by.
+10. **Jogo ao vivo em jsonb, não em tabelas:** os eventos do jogo (golos, remates, substituições) vivem em `matches.live`, validados em código, como o `diagram` dos exercícios. Evita 2–3 tabelas novas com RLS para algo que só se lê jogo a jogo. Se um dia houver estatísticas por época, calculam-se a partir destes jsonb ou migram para uma tabela `match_events`.
+
+11. **Ficaram de fora de propósito:** objetivos e as tabelas do quadro tático. Entram com uma migração própria quando saírem do stand-by.
 
 ## Segurança (RLS)
 

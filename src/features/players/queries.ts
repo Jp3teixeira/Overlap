@@ -47,6 +47,20 @@ export async function listPlayerOptions(): Promise<PlayerOption[]> {
   );
 }
 
+/** Jogo ao vivo: o mínimo de cada jogador (ativos e arquivados, para os nomes de jogos antigos). Sem fotos. */
+export async function listLivePlayers(): Promise<
+  Pick<PlayerListItem, "id" | "name" | "shirt_number" | "positions" | "is_active">[]
+> {
+  const rows = await fetchPlayers();
+  return sortPlayersByPosition(rows).map(({ id, name, shirt_number, positions, is_active }) => ({
+    id,
+    name,
+    shirt_number,
+    positions,
+    is_active,
+  }));
+}
+
 /** Ficha de um jogador. Id inválido, de outra equipa ou inexistente → 404. */
 export async function getPlayer(id: string): Promise<PlayerRow> {
   if (!uuid.safeParse(id).success) notFound();
