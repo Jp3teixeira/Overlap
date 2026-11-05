@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { uuid } from "@/lib/schema-helpers";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentTeam } from "@/lib/team";
+import { liveSchema, type LiveState } from "./live";
 import type { MatchListItem, MatchObservationItem, MatchRow } from "./types";
 
 // Leituras dos jogos. Ler cookies ⇒ chamar só dentro de um <Suspense>.
@@ -122,4 +123,26 @@ export async function getHomeMatches(today: string): Promise<{
     next: (next.data as MatchListItem | null) ?? null,
     last: (last.data as MatchListItem | null) ?? null,
   };
+}
+
+/**
+ * O jogo ao vivo guardado (ou null). Se a coluna ainda não existe (migração 0003 por correr)
+ * devolve null em vez de partir a página do jogo.
+ */
+export async function getMatchLive(matchId: string): Promise<LiveState | null> {
+  if (!uuid.safeParse(matchId).success) return null;
+  const team = await getCurrentTeam();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("matches")
+    .select("live")
+    .eq("id", matchId)
+    .eq("team_id", team.id)
+    .maybeSingle();
+  if (error) {
+    if (error.code === "42703") return null;
+    throw new Error(`getMatchLive: ${error.message}`);
+  }
+  const parsed = liveSchema.safeParse((data as { live: unknown } | null)?.live);
+  return parsed.success ? parsed.data : null;
 }

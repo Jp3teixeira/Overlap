@@ -160,6 +160,13 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - Análise em 3 blocos (Correu bem, Correu mal, O que trabalhar), editáveis, com "Guardar".
   - Links ZeroZero e vídeo (abrem num separador novo).
 - [x] **3.5 Observações do jogo:** lista das observações ligadas + botão "Observação" (`QuickObservation` com o jogo já ligado).
+- [x] **3.6 Jogo ao vivo** (`/jogos/[id]/ao-vivo`, migração `0003`)
+  - Convocatória (7 em campo + banco), 2 partes com duração configurável (25 min por defeito), relógio com pausa e intervalo.
+  - Campo com os 7, banco, substituições por toque, golos com marcador opcional e "desfazer" do último evento.
+  - Estatísticas só da equipa (Nós/Eles): golos e remates em destaque; cantos, faltas e bolas perdidas/recuperadas em "Mais estatísticas".
+  - Por jogador só minutos e golos. Os minutos são calculados a partir das substituições.
+  - Local-first: guarda no telemóvel a cada toque e sincroniza com `matches.live` (funciona sem rede). Ao terminar, o resultado passa para o jogo e fica o resumo na página do jogo.
+  - Fica de fora: tabela de minutos por época no plantel, jogo ao vivo no Início.
 
 **Concluído quando:**
 
