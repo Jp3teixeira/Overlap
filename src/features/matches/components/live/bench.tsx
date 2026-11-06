@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LiveAvatar } from "./live-avatar";
 import type { PlayerMap } from "./types";
 
 /** Os do banco, como botões. No jogo, tocar num deles (com um do campo escolhido) faz a substituição. */
@@ -42,9 +43,11 @@ export function Bench({
                 selected && "border-marker ring-marker ring-2",
               )}
             >
-              <span className="bg-secondary text-secondary-foreground grid size-9 place-items-center rounded-full text-[15px] font-bold [font-stretch:88%] tabular-nums">
-                {p?.shirt_number ?? "–"}
-              </span>
+              <LiveAvatar
+                player={p}
+                size="chip"
+                className="bg-secondary text-secondary-foreground"
+              />
               <span className="max-w-[96px] truncate text-[15px] leading-5 font-medium">
                 {p?.name ?? "Jogador"}
               </span>
