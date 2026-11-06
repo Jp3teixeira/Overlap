@@ -28,6 +28,12 @@ async function BaseData() {
 
   const rows = players
     .filter((p) => p.is_active || !isEmptyBase(p.base))
-    .map((p) => ({ id: p.id, name: p.name, shirtNumber: p.shirt_number, base: p.base }));
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      shirtNumber: p.shirt_number,
+      photoUrl: p.photo_url,
+      base: p.base,
+    }));
   return <BaseForm rows={rows} />;
 }

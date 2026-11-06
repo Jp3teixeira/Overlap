@@ -171,7 +171,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
 - [x] **3.8 Estatísticas** (`/estatisticas`, migração `0004`)
   - Assistência opcional em cada golo nosso (2.º passo depois do marcador; fechar a meio não perde o golo).
   - Equipa: jogos, V/E/D, golos, últimos 5 e médias por jogo (só jogos registados ao vivo).
-  - Jogadores: jogos, minutos, golos e assistências, ordenável; destaques (top 5 marcadores e assistentes).
+  - Jogadores: foto, jogos, minutos, golos e assistências; ordena-se ao tocar no cabeçalho (G = marcadores, A = assistentes).
   - Valores de base por jogador (`/estatisticas/base`): o que já havia antes da app, somado ao resto.
   - Só contam jogos ao vivo **terminados**; os por terminar aparecem num aviso.
   - Entrada pelo botão "Estatísticas" na página Jogos (sem mexer na barra de baixo).
