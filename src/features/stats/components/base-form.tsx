@@ -3,13 +3,20 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { PlayerAvatar } from "@/components/player-avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { runAction } from "@/lib/run-action";
 import { saveStatsBase } from "../actions";
 import type { StatsBase } from "../schemas";
 
-export type BaseRow = { id: string; name: string; shirtNumber: number | null; base: StatsBase };
+export type BaseRow = {
+  id: string;
+  name: string;
+  shirtNumber: number | null;
+  photoUrl: string | null;
+  base: StatsBase;
+};
 
 type Field = keyof StatsBase;
 type Draft = Record<Field, string>;
@@ -77,9 +84,7 @@ export function BaseForm({ rows }: { rows: BaseRow[] }) {
         {rows.map((r) => (
           <li key={r.id} className="px-4 py-3">
             <div className="mb-2 flex items-center gap-2.5">
-              <span className="bg-secondary text-secondary-foreground grid size-8 shrink-0 place-items-center rounded-full text-[14px] font-bold [font-stretch:88%] tabular-nums">
-                {r.shirtNumber ?? "–"}
-              </span>
+              <PlayerAvatar name={r.name} shirtNumber={r.shirtNumber} photoUrl={r.photoUrl} />
               <span className="min-w-0 flex-1 truncate text-[15px] font-medium">{r.name}</span>
             </div>
             <div className="grid grid-cols-4 gap-2">

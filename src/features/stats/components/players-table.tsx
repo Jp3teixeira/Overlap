@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
+import { PlayerAvatar } from "@/components/player-avatar";
 import { cn } from "@/lib/utils";
 
 export type TableRow = {
   id: string;
   name: string;
   shirtNumber: number | null;
+  photoUrl: string | null;
   games: number;
   minutes: number;
   perGame: number;
@@ -87,9 +89,7 @@ export function PlayersTable({ rows }: { rows: TableRow[] }) {
         {sorted.map((r) => (
           <li key={r.id} className="flex items-center gap-1 py-2 pr-2 pl-4">
             <span className="flex min-w-0 flex-1 items-center gap-2.5">
-              <span className="bg-secondary text-secondary-foreground grid size-8 shrink-0 place-items-center rounded-full text-[14px] font-bold [font-stretch:88%] tabular-nums">
-                {r.shirtNumber ?? "–"}
-              </span>
+              <PlayerAvatar name={r.name} shirtNumber={r.shirtNumber} photoUrl={r.photoUrl} />
               <span className="min-w-0">
                 <span className="block truncate text-[15px] leading-5 font-medium">{r.name}</span>
                 {r.games > 0 && (

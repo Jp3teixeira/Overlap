@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { minutesPerGame, toMinutes, type StatsPlayer, type StatsSummary } from "../aggregate";
 import { PlayersTable, type TableRow } from "./players-table";
 import { TeamStats } from "./team-stats";
-import { TopLists } from "./top-lists";
 
 /** Página de estatísticas. Sem hooks: o estado da tabela vive em PlayersTable. */
 export function StatsView({
@@ -34,6 +33,7 @@ export function StatsView({
       id: p.id,
       name: p.name,
       shirtNumber: p.shirt_number,
+      photoUrl: p.photo_url,
       games: l.games,
       minutes: toMinutes(l.seconds),
       perGame: minutesPerGame(l),
@@ -89,7 +89,6 @@ export function StatsView({
       ) : (
         <>
           <TeamStats team={team} teamName={teamName} />
-          <TopLists players={shown} lines={summary.players} />
         </>
       )}
 
