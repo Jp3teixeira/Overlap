@@ -14,9 +14,15 @@ const NAV = [
   { href: "/treinos", label: "Treinos", icon: Timer },
 ] as const;
 
+/** Páginas que ficam "dentro" de uma secção sem estarem debaixo do seu URL. */
+const ALSO_UNDER: Record<string, string[]> = { "/jogos": ["/estatisticas"] };
+
 function isActive(pathname: string | null, href: string) {
   if (!pathname) return false;
-  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+  if (href === "/") return pathname === "/";
+  return [href, ...(ALSO_UNDER[href] ?? [])].some(
+    (base) => pathname === base || pathname.startsWith(`${base}/`),
+  );
 }
 
 type Variant = "sidebar" | "bottom";

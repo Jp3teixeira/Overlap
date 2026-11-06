@@ -68,7 +68,14 @@ const base = {
 };
 
 export const liveEventSchema = z.discriminatedUnion("type", [
-  z.object({ ...base, type: z.literal("goal"), side, playerId: playerId.nullable() }),
+  z.object({
+    ...base,
+    type: z.literal("goal"),
+    side,
+    playerId: playerId.nullable(),
+    // Jogos registados antes das assistências não têm este campo: lê-se como "sem assistência".
+    assistId: playerId.nullable().default(null),
+  }),
   z.object({ ...base, type: z.literal("shot"), side, onTarget: z.boolean() }),
   z.object({ ...base, type: z.enum(STAT_TYPES), side }),
   z.object({
@@ -155,7 +162,7 @@ export function minutesLabel(seconds: number): string {
 // ---------------------------------------------------------------- reducer
 
 export type StatEventInput =
-  | { type: "goal"; side: Side; playerId: string | null }
+  | { type: "goal"; side: Side; playerId: string | null; assistId?: string | null }
   | { type: "shot"; side: Side; onTarget: boolean }
   | { type: StatType; side: Side };
 
@@ -287,6 +294,14 @@ export function liveReducer(s: LiveState, a: LiveAction): LiveState {
         t: elapsedSeconds(s, a.now),
         period: s.period,
       } as LiveEvent;
+      if (event.type === "goal") {
+        // Só há assistência num golo nosso com marcador, e nunca do próprio marcador.
+        const assist =
+          event.side === "us" && event.playerId
+            ? (a.event as { assistId?: string | null }).assistId
+            : null;
+        event.assistId = assist && assist !== event.playerId ? assist : null;
+      }
       return bump(s, { events: [...s.events, event] });
     }
 
@@ -410,11 +425,19 @@ export function playerSeconds(s: LiveState, nowMs: number): Record<string, numbe
   return totals;
 }
 
-export type GoalItem = { id: string; t: number; side: Side; playerId: string | null };
+export type GoalItem = {
+  id: string;
+  t: number;
+  side: Side;
+  playerId: string | null;
+  assistId: string | null;
+};
 
 export function goals(s: LiveState): GoalItem[] {
   return s.events.flatMap((e) =>
-    e.type === "goal" ? [{ id: e.id, t: e.t, side: e.side, playerId: e.playerId }] : [],
+    e.type === "goal"
+      ? [{ id: e.id, t: e.t, side: e.side, playerId: e.playerId, assistId: e.assistId }]
+      : [],
   );
 }
 
@@ -427,6 +450,7 @@ export function referencedPlayerIds(s: LiveState): string[] {
   const ids = new Set<string>(convocados(s));
   for (const e of s.events) {
     if (e.type === "goal" && e.playerId) ids.add(e.playerId);
+    if (e.type === "goal" && e.assistId) ids.add(e.assistId);
     if (e.type === "sub") {
       ids.add(e.outId);
       ids.add(e.inId);

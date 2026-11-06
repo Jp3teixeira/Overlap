@@ -41,9 +41,11 @@ const STAT_LABEL = {
 function describe(e: LiveEvent, map: PlayerMap): string {
   switch (e.type) {
     case "goal":
-      return e.side === "us" && e.playerId
-        ? `Golo de ${playerName(map, e.playerId)}`
-        : `Golo ${SIDE_LABEL[e.side]}`;
+      if (e.side === "us" && e.playerId) {
+        const assist = e.assistId ? ` (ass. ${playerName(map, e.assistId)})` : "";
+        return `Golo de ${playerName(map, e.playerId)}${assist}`;
+      }
+      return `Golo ${SIDE_LABEL[e.side]}`;
     case "shot":
       return `Remate${e.onTarget ? " à baliza" : ""} ${SIDE_LABEL[e.side]}`;
     case "sub":
@@ -82,7 +84,10 @@ export function LiveBoard({
 }) {
   const map = toPlayerMap(players);
   const [selected, setSelected] = useState<Selection>(null);
-  const [goalOpen, setGoalOpen] = useState(false);
+  // Golo nosso em 2 passos: marcador e, a seguir, assistência (opcional). `at` é a hora do 1.º toque.
+  const [goalFlow, setGoalFlow] = useState<
+    { at: number; step: "scorer" } | { at: number; step: "assist"; scorerId: string } | null
+  >(null);
   const [confirmFinish, setConfirmFinish] = useState(false);
 
   useEffect(() => {
@@ -128,7 +133,7 @@ export function LiveBoard({
 
   function onGoal(side: Side) {
     if (side === "us") {
-      setGoalOpen(true);
+      setGoalFlow({ at: timestamp(), step: "scorer" });
       return;
     }
     dispatch({
@@ -140,8 +145,19 @@ export function LiveBoard({
     navigator.vibrate?.(15);
   }
 
-  const scorers = players.filter((p) => state.slots.includes(p.id));
-  const scorersSorted = state.slots.flatMap((id) => scorers.filter((p) => p.id === id));
+  const onPitch = state.slots.flatMap((id) => players.filter((p) => p.id === id));
+
+  /** Regista o golo nosso (a hora é a do 1.º toque, não a de quando acabam de escolher). */
+  function recordGoal(at: number, playerId: string | null, assistId: string | null) {
+    dispatch({
+      type: "record",
+      now: at,
+      id: newId(),
+      event: { type: "goal", side: "us", playerId, assistId },
+    });
+    setGoalFlow(null);
+    navigator.vibrate?.(15);
+  }
 
   return (
     <div className="space-y-5">
@@ -267,36 +283,46 @@ export function LiveBoard({
       <LiveStats state={state} dispatch={dispatch} disabled={false} onGoal={onGoal} newId={newId} />
 
       <PlayerPicker
-        open={goalOpen}
-        onOpenChange={setGoalOpen}
+        open={goalFlow?.step === "scorer"}
+        onOpenChange={(open) => {
+          if (!open) setGoalFlow(null);
+        }}
         title="Quem marcou?"
-        players={scorersSorted}
+        players={onPitch}
         footer={
-          <Button
-            variant="outline"
-            onClick={() => {
-              dispatch({
-                type: "record",
-                now: timestamp(),
-                id: newId(),
-                event: { type: "goal", side: "us", playerId: null },
-              });
-              setGoalOpen(false);
-            }}
-          >
+          <Button variant="outline" onClick={() => goalFlow && recordGoal(goalFlow.at, null, null)}>
             Sem marcador
           </Button>
         }
-        onPick={(id) => {
-          dispatch({
-            type: "record",
-            now: timestamp(),
-            id: newId(),
-            event: { type: "goal", side: "us", playerId: id },
-          });
-          setGoalOpen(false);
-          navigator.vibrate?.(15);
+        onPick={(id) => goalFlow && setGoalFlow({ at: goalFlow.at, step: "assist", scorerId: id })}
+      />
+
+      <PlayerPicker
+        open={goalFlow?.step === "assist"}
+        // Fechar sem escolher não perde o golo: fica sem assistência.
+        onOpenChange={(open) => {
+          if (!open && goalFlow?.step === "assist") {
+            recordGoal(goalFlow.at, goalFlow.scorerId, null);
+          }
         }}
+        title="Quem fez a assistência?"
+        description={
+          goalFlow?.step === "assist" ? `Golo de ${playerName(map, goalFlow.scorerId)}` : undefined
+        }
+        players={onPitch.filter((p) => goalFlow?.step !== "assist" || p.id !== goalFlow.scorerId)}
+        footer={
+          <Button
+            variant="outline"
+            onClick={() =>
+              goalFlow?.step === "assist" && recordGoal(goalFlow.at, goalFlow.scorerId, null)
+            }
+          >
+            Sem assistência
+          </Button>
+        }
+        onPick={(id) =>
+          goalFlow?.step === "assist" && recordGoal(goalFlow.at, goalFlow.scorerId, id)
+        }
       />
     </div>
   );

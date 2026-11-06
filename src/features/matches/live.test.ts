@@ -9,6 +9,7 @@ import {
   liveSchema,
   minutesLabel,
   playerSeconds,
+  referencedPlayerIds,
   score,
   teamStats,
   type LiveAction,
@@ -150,6 +151,79 @@ describe("golos e estatísticas", () => {
     );
     expect(score(s)).toEqual({ us: 2, them: 1 });
     expect(goals(s)[0]).toMatchObject({ side: "us", playerId: ids[6], t: 60 });
+  });
+
+  it("guarda a assistência de um golo nosso", () => {
+    const s = run(
+      ready(),
+      { type: "kickoff", now: 0 },
+      {
+        type: "record",
+        now: MIN,
+        id: "g1",
+        event: { type: "goal", side: "us", playerId: ids[6], assistId: ids[2] },
+      },
+    );
+    expect(goals(s)[0]).toMatchObject({ playerId: ids[6], assistId: ids[2] });
+    expect(referencedPlayerIds(s)).toContain(ids[2]);
+  });
+
+  it("ignora assistências que não fazem sentido", () => {
+    const s = run(
+      ready(),
+      { type: "kickoff", now: 0 },
+      // do próprio marcador
+      {
+        type: "record",
+        now: 1,
+        id: "a",
+        event: { type: "goal", side: "us", playerId: ids[6], assistId: ids[6] },
+      },
+      // sem marcador
+      {
+        type: "record",
+        now: 2,
+        id: "b",
+        event: { type: "goal", side: "us", playerId: null, assistId: ids[2] },
+      },
+      // golo deles
+      {
+        type: "record",
+        now: 3,
+        id: "c",
+        event: { type: "goal", side: "them", playerId: null, assistId: ids[2] },
+      },
+      // sem assistência indicada
+      { type: "record", now: 4, id: "d", event: { type: "goal", side: "us", playerId: ids[1] } },
+    );
+    expect(goals(s).map((g) => g.assistId)).toEqual([null, null, null, null]);
+  });
+
+  it("jogos guardados antes das assistências continuam válidos", () => {
+    const s = run(
+      ready(),
+      { type: "kickoff", now: 0 },
+      { type: "record", now: 1, id: "a", event: { type: "goal", side: "us", playerId: ids[1] } },
+    );
+    const old = JSON.parse(JSON.stringify(s));
+    delete old.events[0].assistId;
+    const parsed = liveSchema.parse(old);
+    expect(goals(parsed)[0].assistId).toBeNull();
+  });
+
+  it("desfazer tira o golo com a assistência", () => {
+    const s = run(
+      ready(),
+      { type: "kickoff", now: 0 },
+      {
+        type: "record",
+        now: 1,
+        id: "a",
+        event: { type: "goal", side: "us", playerId: ids[1], assistId: ids[2] },
+      },
+      { type: "undo" },
+    );
+    expect(goals(s)).toHaveLength(0);
   });
 
   it("um remate à baliza também conta como remate", () => {

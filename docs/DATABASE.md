@@ -28,7 +28,7 @@ erDiagram
 | ---------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `teams`                      | Espaço de trabalho da equipa técnica | Persiste entre épocas                                                                                                                                                                                                              |
 | `team_members`               | Quem tem acesso e com que papel      | Gerida só pelo dashboard                                                                                                                                                                                                           |
-| `players`                    | Ficha do jogador                     | `is_active = false` para arquivar                                                                                                                                                                                                  |
+| `players`                    | Ficha do jogador                     | `is_active = false` para arquivar. `stats_base` (jsonb, migração 0004): jogos, minutos, golos e assistências de antes da app, somados às estatísticas (validado por `statsBaseSchema`). |
 | `player_observations`        | Texto livre sobre um jogador         | Ligação opcional a um treino ou jogo                                                                                                                                                                                               |
 | `exercises`                  | Biblioteca                           | `tags` é um array de enum; arquiva-se, não se apaga. `diagram` (jsonb) guarda o campo desenhado; `series`, `rest_seconds` e `success_criteria` vieram na 0002. `max_players`, `organization` e `coaching_points` já não são usados |
 | `training_sessions`          | Um treino                            | `status`: planeado, realizado ou cancelado                                                                                                                                                                                         |
@@ -61,7 +61,9 @@ erDiagram
 
 10. **Jogo ao vivo em jsonb, não em tabelas:** os eventos do jogo (golos, remates, substituições) vivem em `matches.live`, validados em código, como o `diagram` dos exercícios. Evita 2–3 tabelas novas com RLS para algo que só se lê jogo a jogo. Se um dia houver estatísticas por época, calculam-se a partir destes jsonb ou migram para uma tabela `match_events`.
 
-11. **Ficaram de fora de propósito:** objetivos e as tabelas do quadro tático. Entram com uma migração própria quando saírem do stand-by.
+11. **Estatísticas sem tabelas:** não há tabela de estatísticas. A página `/estatisticas` calcula tudo a partir dos resultados dos jogos, dos `matches.live` terminados e do `players.stats_base`. Os valores de base são um jsonb por jogador (e não um jogo "fantasma") para não inventar jogos que não foram registados.
+
+12. **Ficaram de fora de propósito:** objetivos e as tabelas do quadro tático. Entram com uma migração própria quando saírem do stand-by.
 
 ## Segurança (RLS)
 

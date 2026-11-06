@@ -14,16 +14,29 @@ import {
 import { playerName, type PlayerMap } from "./types";
 
 /** Um valor de cada equipa com uma barra repartida (quem teve mais, de relance). */
-function Versus({ label, us, them }: { label: string; us: number; them: number }) {
+export function Versus({
+  label,
+  us,
+  them,
+  digits = 0,
+}: {
+  label: string;
+  us: number;
+  them: number;
+  /** Casas decimais (médias). */
+  digits?: number;
+}) {
   const total = us + them;
   const usShare = total === 0 ? 0 : (us / total) * 100;
   return (
     <div className="px-4 py-2.5">
       <div className="flex items-baseline justify-between text-[15px]">
-        <span className="w-8 text-lg font-[650] [font-stretch:88%] tabular-nums">{us}</span>
+        <span className="w-10 text-lg font-[650] [font-stretch:88%] tabular-nums">
+          {us.toFixed(digits)}
+        </span>
         <span className="text-muted-foreground">{label}</span>
-        <span className="w-8 text-right text-lg font-[650] [font-stretch:88%] tabular-nums">
-          {them}
+        <span className="w-10 text-right text-lg font-[650] [font-stretch:88%] tabular-nums">
+          {them.toFixed(digits)}
         </span>
       </div>
       <div
@@ -90,6 +103,11 @@ export function LiveSummary({
                 </span>
                 {g.side === "us" && !g.playerId && (
                   <span className="text-muted-foreground">(sem marcador)</span>
+                )}
+                {g.assistId && (
+                  <span className="text-muted-foreground">
+                    · ass. {playerName(players, g.assistId)}
+                  </span>
                 )}
               </li>
             ))}

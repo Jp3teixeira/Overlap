@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
+import { ChartColumn } from "lucide-react";
 import { ListSkeleton } from "@/components/list-skeleton";
 import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
 import { MatchList } from "@/features/matches/components/match-list";
 import { listMatches } from "@/features/matches/queries";
 import { todayISO } from "@/lib/dates";
@@ -13,7 +16,17 @@ export const metadata: Metadata = { title: "Jogos" };
 export default function JogosPage() {
   return (
     <>
-      <PageHeader title="Jogos" />
+      <PageHeader
+        title="Jogos"
+        action={
+          <Button asChild variant="outline" size="sm">
+            <Link href="/estatisticas">
+              <ChartColumn className="size-4" />
+              Estatísticas
+            </Link>
+          </Button>
+        }
+      />
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <JogosData />
       </Suspense>
