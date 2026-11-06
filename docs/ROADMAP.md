@@ -164,9 +164,17 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - Convocatória (7 em campo + banco), 2 partes com duração configurável (25 min por defeito), relógio com pausa e intervalo.
   - Campo com os 7, banco, substituições por toque, golos com marcador opcional e "desfazer" do último evento.
   - Estatísticas só da equipa (Nós/Eles): golos e remates em destaque; cantos, faltas e bolas perdidas/recuperadas em "Mais estatísticas".
-  - Por jogador só minutos e golos. Os minutos são calculados a partir das substituições.
+  - Por jogador: minutos (calculados a partir das substituições), golos e, opcionalmente, a assistência (3.8).
   - Local-first: guarda no telemóvel a cada toque e sincroniza com `matches.live` (funciona sem rede). Ao terminar, o resultado passa para o jogo e fica o resumo na página do jogo.
-  - Fica de fora: tabela de minutos por época no plantel, jogo ao vivo no Início.
+  - Fica de fora: jogo ao vivo no Início.
+- [x] **3.7 Fotos no jogo ao vivo:** a bolinha do campo, o banco e o seletor mostram a foto (com o número num selo); sem foto fica o número.
+- [x] **3.8 Estatísticas** (`/estatisticas`, migração `0004`)
+  - Assistência opcional em cada golo nosso (2.º passo depois do marcador; fechar a meio não perde o golo).
+  - Equipa: jogos, V/E/D, golos, últimos 5 e médias por jogo (só jogos registados ao vivo).
+  - Jogadores: jogos, minutos, golos e assistências, ordenável; destaques (top 5 marcadores e assistentes).
+  - Valores de base por jogador (`/estatisticas/base`): o que já havia antes da app, somado ao resto.
+  - Só contam jogos ao vivo **terminados**; os por terminar aparecem num aviso.
+  - Entrada pelo botão "Estatísticas" na página Jogos (sem mexer na barra de baixo).
 
 **Concluído quando:**
 

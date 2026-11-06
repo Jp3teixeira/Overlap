@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { PIECE_FILL } from "@/features/exercises/diagram";
 import { cn } from "@/lib/utils";
 import { FORMATION_SLOTS, type FormationId } from "../../live";
+import { LiveAvatar } from "./live-avatar";
 import type { PlayerMap } from "./types";
 
 const GRASS_A = "#3f9356";
@@ -77,15 +78,15 @@ export function LineupPitch({
           >
             {player ? (
               <>
-                <span
+                <LiveAvatar
+                  player={player}
+                  size="pitch"
+                  background={goalkeeper ? PIECE_FILL.gk : PIECE_FILL.a}
                   className={cn(
-                    "grid size-11 place-items-center rounded-full border-2 border-white text-[17px] font-bold text-white [font-stretch:88%] tabular-nums shadow-sm",
+                    "border-2 border-white text-white shadow-sm",
                     selected && "ring-marker ring-[3px]",
                   )}
-                  style={{ background: goalkeeper ? PIECE_FILL.gk : PIECE_FILL.a }}
-                >
-                  {player.shirt_number ?? "–"}
-                </span>
+                />
                 <span className="max-w-full truncate rounded bg-black/60 px-1.5 text-[12px] leading-[16px] font-medium text-white">
                   {player.name}
                 </span>
@@ -97,7 +98,7 @@ export function LineupPitch({
               </>
             ) : (
               <>
-                <span className="grid size-11 place-items-center rounded-full border-2 border-dashed border-white/85 bg-white/10 text-white">
+                <span className="grid size-12 place-items-center rounded-full border-2 border-dashed border-white/85 bg-white/10 text-white">
                   <Plus className="size-5" />
                 </span>
                 <span className="text-[11px] leading-3 font-semibold text-white/90">

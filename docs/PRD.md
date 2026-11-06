@@ -73,6 +73,10 @@ Sem contas de pais nem jogadores. As contas são criadas à mão no Supabase (n�
 **Início**
 - Próximo treino, próximo jogo, último resultado, 3 atalhos (Observação, Novo treino, Registar jogo). Nada mais.
 
+**Jogo ao vivo e estatísticas** (entrou depois do MVP)
+- Jogo ao vivo: convocatória, campo com os 7, banco, relógio de 2 partes, substituições, golos com marcador e assistência, contagens da equipa (remates, cantos, faltas, bolas perdidas/recuperadas).
+- Estatísticas (`/estatisticas`): resultados da equipa, médias por jogo, marcadores, assistências, jogos e minutos por jogador. Soma os jogos registados ao vivo e os valores de base de cada jogador (o que já se jogou antes da app).
+
 ### Should have
 - App instalável no ecrã principal (PWA básica, sem offline).
 
@@ -83,7 +87,6 @@ Sem contas de pais nem jogadores. As contas são criadas à mão no Supabase (n�
 ### Won't have (por agora)
 - Objetivos coletivos e individuais → stand-by, primeiro candidato depois do MVP.
 - Quadro tático / bolas paradas visuais → stand-by.
-- Marcadores, assistências, estatísticas (o ZeroZero já tem).
 - Contas de pais/jogadores, notificações, IA, modo offline, várias equipas na interface.
 
 ## Fluxos principais
@@ -124,6 +127,7 @@ Regras:
 | 2026-11-04 | Etiquetas múltiplas de lista fixa (enum) em vez de categoria única | Um exercício cruza categorias |
 | 2026-11-04 | Fotos de jogadores: sim, bucket privado + URL assinado | Pedido do João; autorização do clube a confirmar |
 | 2026-11-04 | Marcadores/assistências fora | O ZeroZero já guarda |
+| 2026-11-06 | Marcadores, assistências e estatísticas dentro | Pedido do João: registar ao vivo (não se lembra depois) e somar na época; ZeroZero fica como referência |
 | 2026-11-04 | Objetivos e quadro tático em stand-by | Não atrasar o MVP |
 | 2026-11-04 | Bolas paradas = só a etiqueta na biblioteca | Custo zero |
 | 2026-11-04 | Só online (sem modo offline) | Ambos têm dados móveis |

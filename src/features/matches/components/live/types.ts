@@ -7,6 +7,8 @@ export type LivePlayer = {
   shirt_number: number | null;
   positions: PlayerPosition[];
   is_active: boolean;
+  /** URL assinado (1 h) da foto; sem foto, usa-se o número. */
+  photo_url?: string | null;
 };
 
 export type PlayerMap = ReadonlyMap<string, LivePlayer>;

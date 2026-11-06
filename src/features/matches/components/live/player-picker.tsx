@@ -3,6 +3,7 @@
 import { ResponsiveSheet } from "@/components/responsive-sheet";
 import { Button } from "@/components/ui/button";
 import { POSITION_LABEL } from "@/features/players/labels";
+import { LiveAvatar } from "./live-avatar";
 import type { LivePlayer } from "./types";
 
 /** Lista de jogadores para escolher um (slot do campo, banco, marcador do golo). */
@@ -44,9 +45,11 @@ export function PlayerPicker({
                 onClick={() => onPick(p.id)}
                 className="h-14 w-full justify-start gap-3 px-2 font-medium"
               >
-                <span className="bg-secondary text-secondary-foreground grid size-9 place-items-center rounded-full text-[15px] font-bold [font-stretch:88%] tabular-nums">
-                  {p.shirt_number ?? "–"}
-                </span>
+                <LiveAvatar
+                  player={p}
+                  size="chip"
+                  className="bg-secondary text-secondary-foreground"
+                />
                 <span className="min-w-0 flex-1 truncate text-left text-base">{p.name}</span>
                 {p.positions[0] && (
                   <span className="text-muted-foreground text-[13px] font-normal">
