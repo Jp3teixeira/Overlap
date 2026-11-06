@@ -202,6 +202,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - Ficha pensada para 5 minutos: campo + legenda, números, "Como se joga", objetivos e critérios; regras e variantes recolhidas.
   - Lista com miniatura do campo e "3 vs 3".
   - Deixam de se usar `max_players`, `organization` e `coaching_points` (as colunas ficam).
+- [x] **4.8 Desenho em movimento:** na ficha, "Ver em movimento" anima as setas pela ordem em que foram desenhadas (desmarcação e condução mexem a peça do início da seta, passe e remate mexem a bola), em ciclo, com pausa e reiniciar. Não muda o editor nem a base de dados.
 
 **Concluído quando:** há 15+ exercícios reais carregados e o teste dos 10 s passa.
 

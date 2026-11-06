@@ -13,7 +13,8 @@ import { formatDuration, formatPlayers, formatRest } from "../filters";
 import { TAG_LABEL } from "../labels";
 import type { ExerciseRow } from "../types";
 import { ExerciseSheet } from "./exercise-sheet";
-import { DiagramLegend, PitchDiagram } from "./pitch-diagram";
+import { AnimatedDiagram } from "./animated-diagram";
+import { DiagramLegend } from "./pitch-diagram";
 
 const SECTIONS = [
   { key: "description", label: "Como se joga" },
@@ -116,9 +117,7 @@ export function ExerciseDetail({
         <div className="flex flex-col gap-3">
           {exercise.diagram ? (
             <>
-              <div className="border-border overflow-hidden rounded-lg border bg-[#3a8a4f]">
-                <PitchDiagram diagram={exercise.diagram} className="mx-auto max-h-[70dvh]" />
-              </div>
+              <AnimatedDiagram diagram={exercise.diagram} />
               <DiagramLegend diagram={exercise.diagram} />
             </>
           ) : (
