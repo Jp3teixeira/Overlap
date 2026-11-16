@@ -89,6 +89,24 @@ export const liveEventSchema = z.discriminatedUnion("type", [
     outId: playerId,
     inId: playerId,
   }),
+  // Dois jogadores do campo trocam de posição (não mexe nos minutos).
+  z.object({
+    ...base,
+    type: z.literal("swap"),
+    a: z
+      .number()
+      .int()
+      .min(0)
+      .max(SLOT_COUNT - 1),
+    b: z
+      .number()
+      .int()
+      .min(0)
+      .max(SLOT_COUNT - 1),
+    /** Quem estava em `a` e em `b` antes da troca. */
+    aId: playerId,
+    bId: playerId,
+  }),
   z.object({ ...base, type: z.literal("period_end") }),
   z.object({ ...base, type: z.literal("period_start") }),
 ]);
@@ -112,6 +130,8 @@ export const liveSchema = z
       startedAt: z.number().nullable(),
     }),
     events: z.array(liveEventSchema).max(800),
+    // Minutos corrigidos à mão depois do jogo (segundos por jogador). Só valem com o jogo terminado.
+    secondsOverride: z.record(playerId, z.number().min(0).max(86_400)).default({}),
   })
   .refine(
     (s) => {
@@ -135,6 +155,7 @@ export function emptyLive(): LiveState {
     starters: null,
     clock: { baseSeconds: 0, startedAt: null },
     events: [],
+    secondsOverride: {},
   };
 }
 
@@ -185,10 +206,23 @@ export type LiveAction =
       event: { type: "goal" | "shot" | StatType; side: Side; onTarget?: boolean };
     }
   | { type: "sub"; now: number; id: string; slot: number; inId: string }
+  | { type: "swap"; now: number; id: string; a: number; b: number }
+  // Edição depois do jogo (só com o jogo terminado).
+  | { type: "editGoal"; id: string; playerId: string | null; assistId: string | null }
+  | { type: "removeGoal"; id: string }
+  | {
+      type: "addGoal";
+      id: string;
+      side: Side;
+      playerId: string | null;
+      assistId: string | null;
+      seconds: number;
+    }
+  | { type: "setMinutes"; playerId: string; seconds: number | null }
   | { type: "undo" };
 
 const LIVE_STATUSES_ACTIVE: LiveStatus[] = ["running", "paused", "halftime"];
-const UNDOABLE = new Set(["goal", "shot", "corner", "foul", "turnover", "recovery", "sub"]);
+const UNDOABLE = new Set(["goal", "shot", "corner", "foul", "turnover", "recovery", "sub", "swap"]);
 
 function bump(s: LiveState, patch: Partial<LiveState>): LiveState {
   return { ...s, ...patch, rev: s.rev + 1 };
@@ -200,6 +234,17 @@ function freeze(s: LiveState, now: number): LiveState["clock"] {
 
 export function isStartable(s: LiveState): boolean {
   return s.status === "setup" && s.slots.every((x) => x !== null);
+}
+
+/** Só há marcador/assistência num golo nosso, a assistência nunca é do próprio marcador. */
+function cleanGoal(
+  side: Side,
+  playerId: string | null,
+  assistId: string | null,
+): { playerId: string | null; assistId: string | null } {
+  if (side !== "us" || !playerId)
+    return { playerId: side === "us" ? playerId : null, assistId: null };
+  return { playerId, assistId: assistId && assistId !== playerId ? assistId : null };
 }
 
 export function liveReducer(s: LiveState, a: LiveAction): LiveState {
@@ -284,10 +329,12 @@ export function liveReducer(s: LiveState, a: LiveAction): LiveState {
 
     case "reopen":
       if (s.status !== "finished") return s;
-      return bump(s, { status: "paused" });
+      // Voltar ao jogo: os minutos voltam a vir das substituições.
+      return bump(s, { status: "paused", secondsOverride: {} });
 
     case "record": {
-      if (!LIVE_STATUSES_ACTIVE.includes(s.status)) return s;
+      // Com o jogo terminado também se aceita (corrigir contagens depois): fica no tempo final.
+      if (!LIVE_STATUSES_ACTIVE.includes(s.status) && s.status !== "finished") return s;
       const event = {
         ...a.event,
         id: a.id,
@@ -295,12 +342,13 @@ export function liveReducer(s: LiveState, a: LiveAction): LiveState {
         period: s.period,
       } as LiveEvent;
       if (event.type === "goal") {
-        // Só há assistência num golo nosso com marcador, e nunca do próprio marcador.
-        const assist =
-          event.side === "us" && event.playerId
-            ? (a.event as { assistId?: string | null }).assistId
-            : null;
-        event.assistId = assist && assist !== event.playerId ? assist : null;
+        const clean = cleanGoal(
+          event.side,
+          event.playerId,
+          (a.event as { assistId?: string | null }).assistId ?? null,
+        );
+        event.playerId = clean.playerId;
+        event.assistId = clean.assistId;
       }
       return bump(s, { events: [...s.events, event] });
     }
@@ -336,10 +384,91 @@ export function liveReducer(s: LiveState, a: LiveAction): LiveState {
       return bump(s, { slots, bench, events: [...s.events, event] });
     }
 
+    case "editGoal": {
+      if (s.status !== "finished") return s;
+      const i = s.events.findIndex((e) => e.id === a.id && e.type === "goal");
+      const e = s.events[i];
+      if (!e || e.type !== "goal") return s;
+      const known = new Set(convocados(s));
+      if ((a.playerId && !known.has(a.playerId)) || (a.assistId && !known.has(a.assistId)))
+        return s;
+      const clean = cleanGoal(e.side, a.playerId, a.assistId);
+      const events = s.events.map((x, j) => (j === i ? { ...e, ...clean } : x));
+      return bump(s, { events });
+    }
+
+    case "removeGoal": {
+      if (s.status !== "finished") return s;
+      if (!s.events.some((e) => e.id === a.id && e.type === "goal")) return s;
+      return bump(s, { events: s.events.filter((e) => e.id !== a.id) });
+    }
+
+    case "addGoal": {
+      if (s.status !== "finished" || s.events.length >= 800) return s;
+      const known = new Set(convocados(s));
+      if ((a.playerId && !known.has(a.playerId)) || (a.assistId && !known.has(a.assistId)))
+        return s;
+      if (s.events.some((e) => e.id === a.id)) return s;
+      const t = Math.min(Math.max(0, a.seconds), s.clock.baseSeconds);
+      const clean = cleanGoal(a.side, a.playerId, a.assistId);
+      const event: LiveEvent = {
+        id: a.id,
+        type: "goal",
+        side: a.side,
+        ...clean,
+        t,
+        period: s.period === 2 && t > s.periodMinutes * 60 ? 2 : 1,
+      };
+      // Mantém os eventos por ordem de tempo.
+      const at = s.events.findIndex((e) => e.t > t);
+      const events =
+        at === -1 ? [...s.events, event] : [...s.events.slice(0, at), event, ...s.events.slice(at)];
+      return bump(s, { events });
+    }
+
+    case "setMinutes": {
+      if (s.status !== "finished" || !convocados(s).includes(a.playerId)) return s;
+      const { [a.playerId]: _old, ...rest } = s.secondsOverride;
+      void _old;
+      if (a.seconds === null) return bump(s, { secondsOverride: rest });
+      const seconds = Math.min(Math.max(0, Math.round(a.seconds)), Math.floor(s.clock.baseSeconds));
+      return bump(s, { secondsOverride: { ...rest, [a.playerId]: seconds } });
+    }
+
+    case "swap": {
+      if (!LIVE_STATUSES_ACTIVE.includes(s.status)) return s;
+      if (a.a === a.b || a.a < 0 || a.b < 0 || a.a >= SLOT_COUNT || a.b >= SLOT_COUNT) return s;
+      const aId = s.slots[a.a];
+      const bId = s.slots[a.b];
+      if (!aId || !bId) return s;
+      const slots = [...s.slots];
+      slots[a.a] = bId;
+      slots[a.b] = aId;
+      const event: LiveEvent = {
+        id: a.id,
+        type: "swap",
+        a: a.a,
+        b: a.b,
+        aId,
+        bId,
+        t: elapsedSeconds(s, a.now),
+        period: s.period,
+      };
+      return bump(s, { slots, events: [...s.events, event] });
+    }
+
     case "undo": {
       const last = s.events.at(-1);
       if (!last || !UNDOABLE.has(last.type) || s.status === "finished") return s;
       const events = s.events.slice(0, -1);
+      if (last.type === "swap") {
+        // Só desfaz se os dois ainda estão onde a troca os deixou.
+        if (s.slots[last.a] !== last.bId || s.slots[last.b] !== last.aId) return s;
+        const slots = [...s.slots];
+        slots[last.a] = last.aId;
+        slots[last.b] = last.bId;
+        return bump(s, { events, slots });
+      }
       if (last.type !== "sub") return bump(s, { events });
       if (s.slots[last.slot] !== last.inId) return s;
       const slots = [...s.slots];
@@ -422,6 +551,11 @@ export function playerSeconds(s: LiveState, nowMs: number): Record<string, numbe
   }
   const end = elapsedSeconds(s, nowMs);
   for (const [id, since] of enteredAt) totals[id] = (totals[id] ?? 0) + Math.max(0, end - since);
+  if (s.status === "finished") {
+    for (const [id, seconds] of Object.entries(s.secondsOverride)) {
+      if (id in totals) totals[id] = seconds;
+    }
+  }
   return totals;
 }
 
@@ -454,6 +588,10 @@ export function referencedPlayerIds(s: LiveState): string[] {
     if (e.type === "sub") {
       ids.add(e.outId);
       ids.add(e.inId);
+    }
+    if (e.type === "swap") {
+      ids.add(e.aId);
+      ids.add(e.bId);
     }
   }
   return [...ids];

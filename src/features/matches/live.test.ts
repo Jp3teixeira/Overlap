@@ -130,6 +130,248 @@ describe("substituições e minutos", () => {
   });
 });
 
+describe("trocas de posição", () => {
+  const started = () => run(ready(), { type: "kickoff", now: 0 });
+
+  it("troca os dois jogadores de lugar sem mexer no banco nem nos minutos", () => {
+    const s = run(
+      started(),
+      { type: "swap", now: 5 * MIN, id: "w", a: 1, b: 5 },
+      { type: "finish", now: 10 * MIN },
+    );
+    expect(s.slots[1]).toBe(ids[5]);
+    expect(s.slots[5]).toBe(ids[1]);
+    expect([...s.bench].sort()).toEqual(ids.slice(7).sort());
+    const sec = playerSeconds(s, 10 * MIN);
+    for (let i = 0; i < 7; i++) expect(sec[ids[i]]).toBe(10 * 60);
+    expect(s.events.at(-1)).toMatchObject({ type: "swap", a: 1, b: 5, aId: ids[1], bId: ids[5] });
+  });
+
+  it("ignora trocas inválidas", () => {
+    const s = started();
+    expect(liveReducer(s, { type: "swap", now: 1, id: "x", a: 2, b: 2 })).toBe(s);
+    expect(liveReducer(s, { type: "swap", now: 1, id: "x", a: 2, b: 9 })).toBe(s);
+    expect(liveReducer(ready(), { type: "swap", now: 1, id: "x", a: 1, b: 2 }).events).toHaveLength(
+      0,
+    );
+  });
+
+  it("o guarda-redes também pode trocar", () => {
+    const s = run(started(), { type: "swap", now: MIN, id: "w", a: 0, b: 6 });
+    expect(s.slots[0]).toBe(ids[6]);
+    expect(s.slots[6]).toBe(ids[0]);
+  });
+
+  it("desfazer repõe as posições", () => {
+    const base = started();
+    const s = run(base, { type: "swap", now: MIN, id: "w", a: 1, b: 2 }, { type: "undo" });
+    expect(s.slots).toEqual(base.slots);
+    expect(s.events).toHaveLength(0);
+  });
+
+  it("não desfaz se uma substituição mexeu entretanto num dos dois", () => {
+    const s = run(
+      started(),
+      { type: "swap", now: MIN, id: "w", a: 1, b: 2 },
+      { type: "sub", now: 2 * MIN, id: "s", slot: 1, inId: ids[7] },
+      { type: "undo" }, // desfaz a substituição
+      { type: "undo" }, // desfaz a troca
+    );
+    expect(s.slots).toEqual(ready().slots);
+  });
+
+  it("o estado com trocas continua a validar e a referir os jogadores", () => {
+    const s = run(started(), { type: "swap", now: MIN, id: "w", a: 1, b: 2 });
+    expect(liveSchema.safeParse(JSON.parse(JSON.stringify(s))).success).toBe(true);
+    expect(referencedPlayerIds(s)).toEqual(expect.arrayContaining([ids[1], ids[2]]));
+  });
+});
+
+describe("editar depois do jogo", () => {
+  /** Jogo de 20' com 2 golos nossos (ids 1 e 2) e um deles. */
+  function finished(): LiveState {
+    return run(
+      ready(),
+      { type: "kickoff", now: 0 },
+      {
+        type: "record",
+        now: 4 * MIN,
+        id: "g1",
+        event: { type: "goal", side: "us", playerId: ids[1], assistId: ids[2] },
+      },
+      {
+        type: "record",
+        now: 8 * MIN,
+        id: "g2",
+        event: { type: "goal", side: "them", playerId: null },
+      },
+      {
+        type: "record",
+        now: 12 * MIN,
+        id: "g3",
+        event: { type: "goal", side: "us", playerId: ids[2], assistId: null },
+      },
+      { type: "finish", now: 20 * MIN },
+    );
+  }
+
+  it("só se edita com o jogo terminado", () => {
+    const live = run(ready(), { type: "kickoff", now: 0 });
+    for (const a of [
+      { type: "editGoal", id: "x", playerId: null, assistId: null },
+      { type: "removeGoal", id: "x" },
+      { type: "addGoal", id: "x", side: "us", playerId: null, assistId: null, seconds: 10 },
+      { type: "setMinutes", playerId: ids[0], seconds: 60 },
+    ] as const) {
+      expect(liveReducer(live, a)).toBe(live);
+    }
+  });
+
+  it("muda o marcador e a assistência de um golo", () => {
+    const s = liveReducer(finished(), {
+      type: "editGoal",
+      id: "g1",
+      playerId: ids[3],
+      assistId: ids[4],
+    });
+    expect(goals(s)[0]).toMatchObject({ playerId: ids[3], assistId: ids[4], t: 4 * 60 });
+  });
+
+  it("a assistência nunca é do marcador, e um golo deles não tem jogadores", () => {
+    const a = liveReducer(finished(), {
+      type: "editGoal",
+      id: "g1",
+      playerId: ids[3],
+      assistId: ids[3],
+    });
+    expect(goals(a)[0].assistId).toBeNull();
+    const b = liveReducer(finished(), {
+      type: "editGoal",
+      id: "g2",
+      playerId: ids[3],
+      assistId: ids[4],
+    });
+    expect(goals(b)[1]).toMatchObject({ playerId: null, assistId: null });
+  });
+
+  it("não aceita jogadores que não foram convocados", () => {
+    const s = finished();
+    const stranger = "00000000-0000-4000-8000-0000000000ff";
+    expect(liveReducer(s, { type: "editGoal", id: "g1", playerId: stranger, assistId: null })).toBe(
+      s,
+    );
+    expect(
+      liveReducer(s, {
+        type: "addGoal",
+        id: "n",
+        side: "us",
+        playerId: stranger,
+        assistId: null,
+        seconds: 60,
+      }),
+    ).toBe(s);
+  });
+
+  it("apagar um golo muda o resultado", () => {
+    const s = liveReducer(finished(), { type: "removeGoal", id: "g3" });
+    expect(score(s)).toEqual({ us: 1, them: 1 });
+  });
+
+  it("acrescenta um golo no minuto certo, por ordem, e limita ao tempo de jogo", () => {
+    const s = liveReducer(finished(), {
+      type: "addGoal",
+      id: "n1",
+      side: "us",
+      playerId: ids[5],
+      assistId: null,
+      seconds: 6 * 60,
+    });
+    expect(goals(s).map((g) => g.id)).toEqual(["g1", "n1", "g2", "g3"]);
+    expect(score(s)).toEqual({ us: 3, them: 1 });
+    const late = liveReducer(finished(), {
+      type: "addGoal",
+      id: "n2",
+      side: "them",
+      playerId: null,
+      assistId: null,
+      seconds: 999 * 60,
+    });
+    expect(goals(late).at(-1)).toMatchObject({ id: "n2", t: 20 * 60 });
+  });
+
+  it("não repete o id de um evento que já existe", () => {
+    const s = finished();
+    expect(
+      liveReducer(s, {
+        type: "addGoal",
+        id: "g1",
+        side: "us",
+        playerId: null,
+        assistId: null,
+        seconds: 5,
+      }),
+    ).toBe(s);
+  });
+
+  it("aceita contagens (remates, cantos...) depois do jogo e dá para as tirar", () => {
+    let s = liveReducer(finished(), {
+      type: "record",
+      now: 0,
+      id: "sh",
+      event: { type: "shot", side: "us", onTarget: true },
+    });
+    s = liveReducer(s, {
+      type: "record",
+      now: 0,
+      id: "co",
+      event: { type: "corner", side: "them" },
+    });
+    expect(teamStats(s).onTarget.us).toBe(1);
+    expect(teamStats(s).corner.them).toBe(1);
+    s = liveReducer(s, { type: "unrecord", event: { type: "corner", side: "them" } });
+    expect(teamStats(s).corner.them).toBe(0);
+  });
+
+  it("corrige os minutos de um jogador e volta atrás", () => {
+    let s = liveReducer(finished(), { type: "setMinutes", playerId: ids[9], seconds: 8 * 60 });
+    expect(playerSeconds(s, 0)[ids[9]]).toBe(8 * 60);
+    expect(playerSeconds(s, 0)[ids[0]]).toBe(20 * 60); // os outros não mudam
+    s = liveReducer(s, { type: "setMinutes", playerId: ids[9], seconds: null });
+    expect(playerSeconds(s, 0)[ids[9]]).toBe(0);
+  });
+
+  it("os minutos corrigidos não passam do tempo de jogo nem ficam negativos", () => {
+    const s = liveReducer(finished(), { type: "setMinutes", playerId: ids[0], seconds: 99 * 60 });
+    expect(playerSeconds(s, 0)[ids[0]]).toBe(20 * 60);
+    const n = liveReducer(finished(), { type: "setMinutes", playerId: ids[0], seconds: -5 });
+    expect(playerSeconds(n, 0)[ids[0]]).toBe(0);
+  });
+
+  it("só se corrigem minutos de convocados", () => {
+    const s = finished();
+    const stranger = "00000000-0000-4000-8000-0000000000ff";
+    expect(liveReducer(s, { type: "setMinutes", playerId: stranger, seconds: 60 })).toBe(s);
+  });
+
+  it("reabrir o jogo volta a calcular os minutos pelas substituições", () => {
+    const edited = liveReducer(finished(), {
+      type: "setMinutes",
+      playerId: ids[0],
+      seconds: 5 * 60,
+    });
+    const reopened = liveReducer(edited, { type: "reopen" });
+    expect(reopened.secondsOverride).toEqual({});
+    expect(playerSeconds(reopened, 20 * MIN)[ids[0]]).toBe(20 * 60);
+  });
+
+  it("jogos guardados antes disto continuam a abrir", () => {
+    const old = JSON.parse(JSON.stringify(finished()));
+    delete old.secondsOverride;
+    const parsed = liveSchema.safeParse(old);
+    expect(parsed.success && parsed.data.secondsOverride).toEqual({});
+  });
+});
+
 describe("golos e estatísticas", () => {
   it("o resultado sai dos golos", () => {
     const s = run(
@@ -254,12 +496,12 @@ describe("golos e estatísticas", () => {
     expect(teamStats(s).foul.us).toBe(1);
   });
 
-  it("não regista nada antes do jogo nem depois de terminar", () => {
+  it("não regista nada antes do jogo (depois de terminar só serve para corrigir)", () => {
     const pre = ready();
     const ev = { type: "record", now: 1, id: "a", event: { type: "corner", side: "us" } } as const;
     expect(liveReducer(pre, ev)).toBe(pre);
     const done = run(pre, { type: "kickoff", now: 0 }, { type: "finish", now: MIN });
-    expect(liveReducer(done, ev)).toBe(done);
+    expect(teamStats(liveReducer(done, ev)).corner.us).toBe(1);
     expect(run(done, { type: "reopen" }).status).toBe("paused");
   });
 });
