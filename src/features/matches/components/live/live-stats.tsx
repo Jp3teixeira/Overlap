@@ -81,6 +81,7 @@ export function LiveStats({
   disabled,
   onGoal,
   newId,
+  hideGoals = false,
 }: {
   state: LiveState;
   dispatch: Dispatch;
@@ -88,6 +89,8 @@ export function LiveStats({
   /** Golo nosso abre a escolha do marcador; golo deles regista logo. */
   onGoal: (side: Side) => void;
   newId: () => string;
+  /** Na edição depois do jogo os golos têm a sua própria lista. */
+  hideGoals?: boolean;
 }) {
   const [more, setMore] = useState(false);
   const stats = teamStats(state);
@@ -101,7 +104,7 @@ export function LiveStats({
 
   return (
     <section aria-label="Estatísticas do jogo" className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
+      <div className={cn("grid grid-cols-2 gap-3", hideGoals && "hidden")}>
         {(["us", "them"] as const).map((side) => (
           <div key={side} className="flex gap-1">
             <Button

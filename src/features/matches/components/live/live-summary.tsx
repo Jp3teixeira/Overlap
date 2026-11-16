@@ -78,6 +78,7 @@ export function LiveSummary({
     );
   const total = ranked.reduce((sum, r) => sum + r.s, 0);
   const sumOk = Math.abs(total - 7 * gameSeconds) < 2;
+  const edited = Object.keys(live.secondsOverride).length > 0;
   const goalList = goals(live);
 
   const extraRows = [
@@ -163,9 +164,11 @@ export function LiveSummary({
         </ul>
         <p className="text-muted-foreground mt-2 text-[13px]">
           Tempo de jogo {formatClock(gameSeconds)}.{" "}
-          {sumOk
-            ? "A soma dos minutos bate certo (7 jogadores em campo o tempo todo)."
-            : "A soma dos minutos não bate certo com 7 em campo: confirma as substituições."}
+          {edited
+            ? "Minutos corrigidos à mão."
+            : sumOk
+              ? "A soma dos minutos bate certo (7 jogadores em campo o tempo todo)."
+              : "A soma dos minutos não bate certo com 7 em campo: confirma as substituições."}
         </p>
       </section>
     </div>

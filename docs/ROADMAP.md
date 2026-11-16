@@ -176,6 +176,7 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - Só contam jogos ao vivo **terminados**; os por terminar aparecem num aviso.
   - Entrada pelo botão "Estatísticas" na página Jogos (sem mexer na barra de baixo).
 - [x] **3.9 Trocar jogadores de posição** (jogo ao vivo): tocar em dois jogadores do campo troca-os de lugar (evento `swap`; não mexe nos minutos; "Desfazer" repõe).
+- [x] **3.10 Editar o jogo depois de acabar:** no ecrã "Jogo terminado", "Editar golos, estatísticas e minutos". Golos: mudar marcador/assistência, apagar, acrescentar (com o minuto); contagens da equipa (remates, cantos...) com − e +; minutos por jogador com − e + e "repor". O resultado acompanha os golos e passa para o jogo. Os minutos corrigidos ficam em `live.secondsOverride` (sem migração) e "Reabrir jogo" volta a calculá-los pelas substituições.
 
 **Concluído quando:**
 

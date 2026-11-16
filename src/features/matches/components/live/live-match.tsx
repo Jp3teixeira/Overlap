@@ -9,6 +9,7 @@ import { runAction } from "@/lib/run-action";
 import { saveMatchLive } from "../../actions";
 import { emptyLive, liveReducer, liveSchema, score, type LiveState } from "../../live";
 import { LiveBoard, type SyncState } from "./live-board";
+import { LiveEdit } from "./live-edit";
 import { LiveSetup } from "./live-setup";
 import { LiveSummary } from "./live-summary";
 import { toPlayerMap, type LivePlayer } from "./types";
@@ -100,6 +101,7 @@ function LiveMatchInner({ matchId, opponent, teamName, players, initial }: Props
     pickInitial(initial, readLocal(storageKey)),
   );
   const [sync, setSync] = useState<SyncState>({ kind: "saved" });
+  const [editing, setEditing] = useState(false);
 
   const latest = useRef(state);
   const savedRev = useRef(initial?.rev ?? 0);
@@ -205,7 +207,19 @@ function LiveMatchInner({ matchId, opponent, teamName, players, initial }: Props
         />
       )}
 
-      {state.status === "finished" && (
+      {state.status === "finished" && editing && (
+        <LiveEdit
+          state={state}
+          dispatch={dispatch}
+          players={players}
+          teamName={teamName}
+          opponent={opponent}
+          newId={newId}
+          onDone={() => setEditing(false)}
+        />
+      )}
+
+      {state.status === "finished" && !editing && (
         <div className="space-y-6">
           <div className="border-border bg-card rounded-lg border px-4 py-4 text-center">
             <p className="text-muted-foreground text-[13px] font-medium">Jogo terminado</p>
@@ -226,18 +240,23 @@ function LiveMatchInner({ matchId, opponent, teamName, players, initial }: Props
             teamName={teamName}
             opponent={opponent}
           />
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="lg"
-              className="flex-1"
-              onClick={() => dispatch({ type: "reopen" })}
-            >
-              Reabrir jogo
+          <div className="flex flex-col gap-2">
+            <Button variant="outline" size="lg" onClick={() => setEditing(true)}>
+              Editar golos, estatísticas e minutos
             </Button>
-            <Button asChild size="lg" className="flex-1">
-              <Link href={`/jogos/${matchId}`}>Voltar ao jogo</Link>
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="lg"
+                className="flex-1"
+                onClick={() => dispatch({ type: "reopen" })}
+              >
+                Reabrir jogo
+              </Button>
+              <Button asChild size="lg" className="flex-1">
+                <Link href={`/jogos/${matchId}`}>Voltar ao jogo</Link>
+              </Button>
+            </div>
           </div>
         </div>
       )}
