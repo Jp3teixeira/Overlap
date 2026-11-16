@@ -50,6 +50,8 @@ function describe(e: LiveEvent, map: PlayerMap): string {
       return `Remate${e.onTarget ? " à baliza" : ""} ${SIDE_LABEL[e.side]}`;
     case "sub":
       return `Entrou ${playerName(map, e.inId)}`;
+    case "swap":
+      return `Trocaram ${playerName(map, e.aId)} e ${playerName(map, e.bId)}`;
     case "period_end":
     case "period_start":
       return "";
@@ -58,7 +60,7 @@ function describe(e: LiveEvent, map: PlayerMap): string {
   }
 }
 
-const UNDOABLE = new Set(["goal", "shot", "corner", "foul", "turnover", "recovery", "sub"]);
+const UNDOABLE = new Set(["goal", "shot", "corner", "foul", "turnover", "recovery", "sub", "swap"]);
 
 /** O jogo a decorrer: marcador, relógio, campo, banco e contagens. */
 export function LiveBoard({
@@ -119,8 +121,18 @@ export function LiveBoard({
     toast.success(`Entrou ${playerName(map, inId)}, saiu ${playerName(map, outId)}`);
   }
 
+  function swapSlots(a: number, b: number) {
+    const aId = state.slots[a];
+    const bId = state.slots[b];
+    dispatch({ type: "swap", now: timestamp(), id: newId(), a, b });
+    setSelected(null);
+    navigator.vibrate?.(15);
+    toast.success(`Trocaram: ${playerName(map, aId)} e ${playerName(map, bId)}`);
+  }
+
   function onSlot(slot: number) {
     if (selected?.kind === "bench") return substitute(slot, selected.id);
+    if (selected?.kind === "slot" && selected.slot !== slot) return swapSlots(selected.slot, slot);
     setSelected(
       selected?.kind === "slot" && selected.slot === slot ? null : { kind: "slot", slot },
     );
@@ -265,7 +277,8 @@ export function LiveBoard({
           onSlotClick={onSlot}
         />
         <p className="text-muted-foreground mt-2 text-[13px]">
-          Para substituir, toca num jogador do campo e depois num do banco.
+          Para substituir, toca num jogador do campo e depois num do banco. Para trocar de posição,
+          toca em dois do campo.
         </p>
       </section>
 

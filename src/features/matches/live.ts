@@ -89,6 +89,24 @@ export const liveEventSchema = z.discriminatedUnion("type", [
     outId: playerId,
     inId: playerId,
   }),
+  // Dois jogadores do campo trocam de posição (não mexe nos minutos).
+  z.object({
+    ...base,
+    type: z.literal("swap"),
+    a: z
+      .number()
+      .int()
+      .min(0)
+      .max(SLOT_COUNT - 1),
+    b: z
+      .number()
+      .int()
+      .min(0)
+      .max(SLOT_COUNT - 1),
+    /** Quem estava em `a` e em `b` antes da troca. */
+    aId: playerId,
+    bId: playerId,
+  }),
   z.object({ ...base, type: z.literal("period_end") }),
   z.object({ ...base, type: z.literal("period_start") }),
 ]);
@@ -185,10 +203,11 @@ export type LiveAction =
       event: { type: "goal" | "shot" | StatType; side: Side; onTarget?: boolean };
     }
   | { type: "sub"; now: number; id: string; slot: number; inId: string }
+  | { type: "swap"; now: number; id: string; a: number; b: number }
   | { type: "undo" };
 
 const LIVE_STATUSES_ACTIVE: LiveStatus[] = ["running", "paused", "halftime"];
-const UNDOABLE = new Set(["goal", "shot", "corner", "foul", "turnover", "recovery", "sub"]);
+const UNDOABLE = new Set(["goal", "shot", "corner", "foul", "turnover", "recovery", "sub", "swap"]);
 
 function bump(s: LiveState, patch: Partial<LiveState>): LiveState {
   return { ...s, ...patch, rev: s.rev + 1 };
@@ -336,10 +355,40 @@ export function liveReducer(s: LiveState, a: LiveAction): LiveState {
       return bump(s, { slots, bench, events: [...s.events, event] });
     }
 
+    case "swap": {
+      if (!LIVE_STATUSES_ACTIVE.includes(s.status)) return s;
+      if (a.a === a.b || a.a < 0 || a.b < 0 || a.a >= SLOT_COUNT || a.b >= SLOT_COUNT) return s;
+      const aId = s.slots[a.a];
+      const bId = s.slots[a.b];
+      if (!aId || !bId) return s;
+      const slots = [...s.slots];
+      slots[a.a] = bId;
+      slots[a.b] = aId;
+      const event: LiveEvent = {
+        id: a.id,
+        type: "swap",
+        a: a.a,
+        b: a.b,
+        aId,
+        bId,
+        t: elapsedSeconds(s, a.now),
+        period: s.period,
+      };
+      return bump(s, { slots, events: [...s.events, event] });
+    }
+
     case "undo": {
       const last = s.events.at(-1);
       if (!last || !UNDOABLE.has(last.type) || s.status === "finished") return s;
       const events = s.events.slice(0, -1);
+      if (last.type === "swap") {
+        // Só desfaz se os dois ainda estão onde a troca os deixou.
+        if (s.slots[last.a] !== last.bId || s.slots[last.b] !== last.aId) return s;
+        const slots = [...s.slots];
+        slots[last.a] = last.aId;
+        slots[last.b] = last.bId;
+        return bump(s, { events, slots });
+      }
       if (last.type !== "sub") return bump(s, { events });
       if (s.slots[last.slot] !== last.inId) return s;
       const slots = [...s.slots];
@@ -454,6 +503,10 @@ export function referencedPlayerIds(s: LiveState): string[] {
     if (e.type === "sub") {
       ids.add(e.outId);
       ids.add(e.inId);
+    }
+    if (e.type === "swap") {
+      ids.add(e.aId);
+      ids.add(e.bId);
     }
   }
   return [...ids];

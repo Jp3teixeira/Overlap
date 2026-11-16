@@ -130,6 +130,63 @@ describe("substituições e minutos", () => {
   });
 });
 
+describe("trocas de posição", () => {
+  const started = () => run(ready(), { type: "kickoff", now: 0 });
+
+  it("troca os dois jogadores de lugar sem mexer no banco nem nos minutos", () => {
+    const s = run(
+      started(),
+      { type: "swap", now: 5 * MIN, id: "w", a: 1, b: 5 },
+      { type: "finish", now: 10 * MIN },
+    );
+    expect(s.slots[1]).toBe(ids[5]);
+    expect(s.slots[5]).toBe(ids[1]);
+    expect([...s.bench].sort()).toEqual(ids.slice(7).sort());
+    const sec = playerSeconds(s, 10 * MIN);
+    for (let i = 0; i < 7; i++) expect(sec[ids[i]]).toBe(10 * 60);
+    expect(s.events.at(-1)).toMatchObject({ type: "swap", a: 1, b: 5, aId: ids[1], bId: ids[5] });
+  });
+
+  it("ignora trocas inválidas", () => {
+    const s = started();
+    expect(liveReducer(s, { type: "swap", now: 1, id: "x", a: 2, b: 2 })).toBe(s);
+    expect(liveReducer(s, { type: "swap", now: 1, id: "x", a: 2, b: 9 })).toBe(s);
+    expect(liveReducer(ready(), { type: "swap", now: 1, id: "x", a: 1, b: 2 }).events).toHaveLength(
+      0,
+    );
+  });
+
+  it("o guarda-redes também pode trocar", () => {
+    const s = run(started(), { type: "swap", now: MIN, id: "w", a: 0, b: 6 });
+    expect(s.slots[0]).toBe(ids[6]);
+    expect(s.slots[6]).toBe(ids[0]);
+  });
+
+  it("desfazer repõe as posições", () => {
+    const base = started();
+    const s = run(base, { type: "swap", now: MIN, id: "w", a: 1, b: 2 }, { type: "undo" });
+    expect(s.slots).toEqual(base.slots);
+    expect(s.events).toHaveLength(0);
+  });
+
+  it("não desfaz se uma substituição mexeu entretanto num dos dois", () => {
+    const s = run(
+      started(),
+      { type: "swap", now: MIN, id: "w", a: 1, b: 2 },
+      { type: "sub", now: 2 * MIN, id: "s", slot: 1, inId: ids[7] },
+      { type: "undo" }, // desfaz a substituição
+      { type: "undo" }, // desfaz a troca
+    );
+    expect(s.slots).toEqual(ready().slots);
+  });
+
+  it("o estado com trocas continua a validar e a referir os jogadores", () => {
+    const s = run(started(), { type: "swap", now: MIN, id: "w", a: 1, b: 2 });
+    expect(liveSchema.safeParse(JSON.parse(JSON.stringify(s))).success).toBe(true);
+    expect(referencedPlayerIds(s)).toEqual(expect.arrayContaining([ids[1], ids[2]]));
+  });
+});
+
 describe("golos e estatísticas", () => {
   it("o resultado sai dos golos", () => {
     const s = run(
