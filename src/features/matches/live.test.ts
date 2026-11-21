@@ -9,6 +9,7 @@ import {
   liveSchema,
   minutesLabel,
   playerSeconds,
+  playerStats,
   referencedPlayerIds,
   score,
   teamStats,
@@ -326,7 +327,7 @@ describe("editar depois do jogo", () => {
       id: "co",
       event: { type: "corner", side: "them" },
     });
-    expect(teamStats(s).onTarget.us).toBe(1);
+    expect(teamStats(s).onTarget.us).toBe(3); // 2 golos nossos + 1 remate à baliza
     expect(teamStats(s).corner.them).toBe(1);
     s = liveReducer(s, { type: "unrecord", event: { type: "corner", side: "them" } });
     expect(teamStats(s).corner.them).toBe(0);
@@ -524,5 +525,161 @@ describe("persistência", () => {
     const s = ready();
     const bad = { ...s, bench: [...s.bench, ids[0]] };
     expect(liveSchema.safeParse(bad).success).toBe(false);
+  });
+});
+
+describe("registar a ver o vídeo", () => {
+  const rec = (
+    id: string,
+    event: Extract<LiveAction, { type: "record" }>["event"],
+    now = 0,
+  ): LiveAction => ({
+    type: "record",
+    now,
+    id,
+    event,
+  });
+
+  it("pode começar com o relógio parado e o minuto põe-se à mão", () => {
+    let s = run(ready(), { type: "kickoff", now: 5000, running: false });
+    expect(s.status).toBe("paused");
+    expect(elapsedSeconds(s, 999_999)).toBe(0);
+    s = liveReducer(s, { type: "setClock", now: 0, seconds: 12 * 60 });
+    s = liveReducer(s, rec("a", { type: "shot", side: "us", onTarget: false, playerId: ids[1] }));
+    expect(s.events[0].t).toBe(12 * 60);
+  });
+
+  it("com o relógio a andar, o minuto novo continua a contar a partir daí", () => {
+    let s = run(ready(), { type: "kickoff", now: 0 });
+    s = liveReducer(s, { type: "setClock", now: 10_000, seconds: 600 });
+    expect(elapsedSeconds(s, 10_000 + 30_000)).toBe(630);
+  });
+
+  it("o relógio só se mexe com o jogo começado e não passa de 24 h nem fica negativo", () => {
+    const before = ready();
+    expect(liveReducer(before, { type: "setClock", now: 0, seconds: 60 })).toBe(before);
+    const s = run(before, { type: "kickoff", now: 0, running: false });
+    expect(liveReducer(s, { type: "setClock", now: 0, seconds: -50 }).clock.baseSeconds).toBe(0);
+    expect(liveReducer(s, { type: "setClock", now: 0, seconds: 1e9 }).clock.baseSeconds).toBe(
+      86_400,
+    );
+  });
+
+  it("terminar pode fixar a duração do jogo", () => {
+    const s = run(
+      ready(),
+      { type: "kickoff", now: 0, running: false },
+      { type: "finish", now: 0, seconds: 50 * 60 },
+    );
+    expect(s.status).toBe("finished");
+    expect(elapsedSeconds(s, 0)).toBe(50 * 60);
+  });
+
+  it("um golo conta como remate à baliza, nosso ou deles", () => {
+    const s = run(
+      ready(),
+      { type: "kickoff", now: 0, running: false },
+      rec("g1", { type: "goal", side: "us", playerId: ids[1], assistId: null }),
+      rec("g2", { type: "goal", side: "them", playerId: null }),
+      rec("s1", { type: "shot", side: "us", onTarget: false, playerId: ids[1] }),
+    );
+    const t = teamStats(s);
+    expect(t.shots).toEqual({ us: 2, them: 1 });
+    expect(t.onTarget).toEqual({ us: 1, them: 1 });
+  });
+
+  it("estatísticas por jogador somam na equipa", () => {
+    const s = run(
+      ready(),
+      { type: "kickoff", now: 0, running: false },
+      rec("g1", { type: "goal", side: "us", playerId: ids[1], assistId: ids[2] }),
+      rec("a", { type: "shot", side: "us", onTarget: true, playerId: ids[1] }),
+      rec("b", { type: "shot", side: "us", onTarget: false, playerId: ids[2] }),
+      rec("c", { type: "recovery", side: "us", playerId: ids[3] }),
+      rec("d", { type: "recovery", side: "us", playerId: ids[3] }),
+      rec("e", { type: "turnover", side: "us", playerId: ids[2] }),
+      rec("f", { type: "corner", side: "us", playerId: ids[4] }),
+      rec("g", { type: "foul", side: "us" }), // sem jogador: só conta na equipa
+    );
+    const p = playerStats(s);
+    expect(p[ids[1]]).toMatchObject({ goals: 1, shots: 2, onTarget: 2 });
+    expect(p[ids[2]]).toMatchObject({ assists: 1, shots: 1, onTarget: 0, turnover: 1 });
+    expect(p[ids[3]].recovery).toBe(2);
+    expect(p[ids[4]].corner).toBe(1);
+    const t = teamStats(s);
+    expect(t.recovery.us).toBe(2);
+    expect(t.foul.us).toBe(1);
+    expect(t.shots.us).toBe(3);
+    // Soma dos jogadores nunca passa da equipa.
+    const sum = (k: "shots" | "recovery" | "foul") =>
+      Object.values(p).reduce((n, l) => n + l[k], 0);
+    expect(sum("shots")).toBe(t.shots.us);
+    expect(sum("foul")).toBe(0);
+  });
+
+  it("jogador desconhecido ou do adversário fica sem jogador", () => {
+    const s = run(
+      ready(),
+      { type: "kickoff", now: 0, running: false },
+      rec("a", { type: "recovery", side: "us", playerId: "00000000-0000-4000-8000-0000000000ff" }),
+      rec("b", { type: "recovery", side: "them", playerId: ids[1] }),
+    );
+    expect(s.events.every((e) => e.type === "recovery" && e.playerId === null)).toBe(true);
+  });
+
+  it("o − de um jogador tira o último desse jogador", () => {
+    let s = run(
+      ready(),
+      { type: "kickoff", now: 0, running: false },
+      rec("a", { type: "recovery", side: "us", playerId: ids[1] }),
+      rec("b", { type: "recovery", side: "us", playerId: ids[2] }),
+      rec("c", { type: "recovery", side: "us", playerId: ids[1] }),
+    );
+    s = liveReducer(s, {
+      type: "unrecord",
+      event: { type: "recovery", side: "us", playerId: ids[2] },
+    });
+    expect(s.events.map((e) => e.id)).toEqual(["a", "c"]);
+    s = liveReducer(s, { type: "unrecord", event: { type: "recovery", side: "us" } });
+    expect(s.events.map((e) => e.id)).toEqual(["a"]);
+  });
+
+  it("substituições registadas fora de ordem dão os mesmos minutos", () => {
+    const s = run(
+      ready(),
+      { type: "kickoff", now: 0, running: false },
+      { type: "setClock", now: 0, seconds: 20 * 60 },
+      { type: "sub", now: 0, id: "s2", slot: 0, inId: ids[8] }, // 20' (registada primeiro)
+      { type: "setClock", now: 0, seconds: 10 * 60 },
+      { type: "sub", now: 0, id: "s1", slot: 1, inId: ids[7] }, // 10'
+      { type: "finish", now: 0, seconds: 30 * 60 },
+    );
+    const sec = playerSeconds(s, 0);
+    expect(sec[ids[7]]).toBe(20 * 60);
+    expect(sec[ids[8]]).toBe(10 * 60);
+    expect(sec[ids[1]]).toBe(10 * 60);
+    expect(sec[ids[0]]).toBe(20 * 60);
+  });
+
+  it("jogos antigos (sem playerId nos remates) continuam válidos", () => {
+    const old = {
+      ...ready(),
+      events: [
+        { id: "x", t: 5, period: 1, type: "shot", side: "us", onTarget: true },
+        { id: "y", t: 6, period: 1, type: "corner", side: "them" },
+      ],
+    };
+    const parsed = liveSchema.parse(old);
+    expect(parsed.events[0]).toMatchObject({ playerId: null });
+    expect(parsed.events[1]).toMatchObject({ playerId: null });
+  });
+
+  it("os jogadores dos remates contam como referenciados", () => {
+    const s = run(
+      ready(),
+      { type: "kickoff", now: 0, running: false },
+      rec("a", { type: "shot", side: "us", onTarget: true, playerId: ids[3] }),
+    );
+    expect(referencedPlayerIds(s)).toContain(ids[3]);
   });
 });

@@ -118,8 +118,9 @@ describe("equipa", () => {
       squad(),
     );
     expect(team.liveGames).toBe(1);
-    expect(team.averages?.shots).toEqual({ us: 2, them: 0 });
-    expect(team.averages?.onTarget.us).toBe(1);
+    // 2 remates registados + os golos (1 nosso, 1 deles) contam como remates à baliza
+    expect(team.averages?.shots).toEqual({ us: 3, them: 1 });
+    expect(team.averages?.onTarget).toEqual({ us: 2, them: 1 });
     expect(team.averages?.corner.them).toBe(1);
   });
 
@@ -170,6 +171,36 @@ describe("jogadores", () => {
     expect(line(2).assists).toBe(1);
     expect(line(2).goals).toBe(0);
     expect(players.reduce((s, p) => s + p.goals, 0)).toBe(1); // o golo deles não conta a ninguém
+  });
+
+  it("remates e bolas recuperadas somam por jogador (o golo conta como remate)", () => {
+    const live = (
+      [
+        {
+          type: "record",
+          now: 1 * MIN,
+          id: "r1",
+          event: { type: "shot", side: "us", onTarget: false, playerId: ids[6] },
+        },
+        {
+          type: "record",
+          now: 2 * MIN,
+          id: "r2",
+          event: { type: "recovery", side: "us", playerId: ids[6] },
+        },
+        {
+          type: "record",
+          now: 3 * MIN,
+          id: "g1",
+          event: { type: "goal", side: "us", playerId: ids[6], assistId: null },
+        },
+        { type: "finish", now: 10 * MIN },
+      ] satisfies LiveAction[]
+    ).reduce(liveReducer, started());
+    const { players: p } = summarize([match({ id: "a", live })], squad());
+    const l = p.find((x) => x.id === ids[6])!;
+    expect(l).toMatchObject({ shots: 2, recoveries: 1, goals: 1 });
+    expect(p.find((x) => x.id === ids[0])).toMatchObject({ shots: 0, recoveries: 0 });
   });
 
   it("os valores de base somam-se ao que vem dos jogos", () => {

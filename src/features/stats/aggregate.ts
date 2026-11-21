@@ -3,6 +3,7 @@ import {
   convocados,
   goals,
   playerSeconds,
+  playerStats,
   teamStats,
   type LiveState,
   type Side,
@@ -59,6 +60,9 @@ export type PlayerLine = {
   seconds: number;
   goals: number;
   assists: number;
+  /** Só dos jogos registados com estatísticas por jogador (a base não tem). */
+  shots: number;
+  recoveries: number;
 };
 
 export type StatsSummary = {
@@ -142,6 +146,8 @@ export function summarize(matches: StatsMatch[], players: StatsPlayer[]): StatsS
         seconds: p.base.minutes * 60,
         goals: p.base.goals,
         assists: p.base.assists,
+        shots: 0,
+        recoveries: 0,
       },
     ]),
   );
@@ -152,6 +158,13 @@ export function summarize(matches: StatsMatch[], players: StatsPlayer[]): StatsS
       if (!line) continue;
       line.games += 1;
       line.seconds += seconds[id] ?? 0;
+    }
+    const stats = playerStats(live);
+    for (const [id, l] of Object.entries(stats)) {
+      const line = lines.get(id);
+      if (!line) continue;
+      line.shots += l.shots;
+      line.recoveries += l.recovery;
     }
     for (const g of goals(live)) {
       if (g.side !== "us") continue;

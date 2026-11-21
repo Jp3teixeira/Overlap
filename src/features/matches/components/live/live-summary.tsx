@@ -7,9 +7,11 @@ import {
   goals,
   minutesLabel,
   playerSeconds,
+  playerStats,
   score,
   teamStats,
   type LiveState,
+  type PlayerStatLine,
 } from "../../live";
 import { playerName, type PlayerMap } from "./types";
 
@@ -51,6 +53,57 @@ export function Versus({
   );
 }
 
+/** Estatísticas da equipa estilo Flashscore: um valor de cada lado e uma barra. */
+export function TeamStatsTable({
+  live,
+  teamName,
+  opponent,
+}: {
+  live: LiveState;
+  teamName: string;
+  opponent: string;
+}) {
+  const stats = teamStats(live);
+  const result = score(live);
+  return (
+    <div className="border-border bg-card divide-border divide-y rounded-lg border">
+      <div className="text-muted-foreground flex justify-between px-4 pt-2.5 pb-1 text-[13px] font-medium">
+        <span className="max-w-[40%] truncate">{teamName}</span>
+        <span className="max-w-[40%] truncate">{opponent}</span>
+      </div>
+      <Versus label="Golos" us={result.us} them={result.them} />
+      <Versus label="Remates" us={stats.shots.us} them={stats.shots.them} />
+      <Versus label="À baliza" us={stats.onTarget.us} them={stats.onTarget.them} />
+      <Versus
+        label="Remates fora"
+        us={stats.shots.us - stats.onTarget.us}
+        them={stats.shots.them - stats.onTarget.them}
+      />
+      <Versus label="Cantos" us={stats.corner.us} them={stats.corner.them} />
+      <Versus label="Faltas" us={stats.foul.us} them={stats.foul.them} />
+      <Versus label="Bolas perdidas" us={stats.turnover.us} them={stats.turnover.them} />
+      <Versus label="Bolas recuperadas" us={stats.recovery.us} them={stats.recovery.them} />
+    </div>
+  );
+}
+
+/** "1 golo · 3 remates (2 à baliza) · 4 recuperadas": só o que não é zero. */
+export function playerStatText(l: PlayerStatLine): string {
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+  const parts: string[] = [];
+  if (l.goals) parts.push(plural(l.goals, "golo", "golos"));
+  if (l.assists) parts.push(plural(l.assists, "assistência", "assistências"));
+  if (l.shots)
+    parts.push(
+      `${plural(l.shots, "remate", "remates")}${l.onTarget ? ` (${l.onTarget} à baliza)` : ""}`,
+    );
+  if (l.recovery) parts.push(plural(l.recovery, "recuperada", "recuperadas"));
+  if (l.turnover) parts.push(plural(l.turnover, "perdida", "perdidas"));
+  if (l.corner) parts.push(plural(l.corner, "canto", "cantos"));
+  if (l.foul) parts.push(plural(l.foul, "falta", "faltas"));
+  return parts.join(" · ");
+}
+
 /**
  * Resumo de um jogo registado ao vivo: golos, estatísticas e minutos por jogador.
  * Sem hooks, serve tanto no servidor (ficha do jogo) como no cliente (fim do jogo).
@@ -66,8 +119,7 @@ export function LiveSummary({
   teamName: string;
   opponent: string;
 }) {
-  const stats = teamStats(live);
-  const result = score(live);
+  const lines = playerStats(live);
   const gameSeconds = elapsedSeconds(live, 0);
   const seconds = playerSeconds(live, 0);
   const ranked = convocados(live)
@@ -80,13 +132,9 @@ export function LiveSummary({
   const sumOk = Math.abs(total - 7 * gameSeconds) < 2;
   const edited = Object.keys(live.secondsOverride).length > 0;
   const goalList = goals(live);
-
-  const extraRows = [
-    { label: "Cantos", ...stats.corner },
-    { label: "Faltas", ...stats.foul },
-    { label: "Bolas perdidas", ...stats.turnover },
-    { label: "Bolas recuperadas", ...stats.recovery },
-  ].filter((r) => r.us + r.them > 0);
+  const statText = Object.fromEntries(
+    Object.entries(lines).map(([id, l]) => [id, playerStatText(l)]),
+  );
 
   return (
     <div className="space-y-6">
@@ -118,22 +166,11 @@ export function LiveSummary({
 
       <section>
         <SectionTitle>Estatísticas</SectionTitle>
-        <div className="border-border bg-card divide-border divide-y rounded-lg border">
-          <div className="text-muted-foreground flex justify-between px-4 pt-2.5 pb-1 text-[13px] font-medium">
-            <span className="max-w-[40%] truncate">{teamName}</span>
-            <span className="max-w-[40%] truncate">{opponent}</span>
-          </div>
-          <Versus label="Golos" us={result.us} them={result.them} />
-          <Versus label="Remates" us={stats.shots.us} them={stats.shots.them} />
-          <Versus label="À baliza" us={stats.onTarget.us} them={stats.onTarget.them} />
-          {extraRows.map((r) => (
-            <Versus key={r.label} label={r.label} us={r.us} them={r.them} />
-          ))}
-        </div>
+        <TeamStatsTable live={live} teamName={teamName} opponent={opponent} />
       </section>
 
       <section>
-        <SectionTitle>Minutos</SectionTitle>
+        <SectionTitle>Jogadores</SectionTitle>
         <ul className="border-border bg-card divide-border divide-y rounded-lg border">
           {ranked.map(({ id, s }) => {
             const share = gameSeconds > 0 ? Math.min(100, (s / gameSeconds) * 100) : 0;
@@ -152,6 +189,11 @@ export function LiveSummary({
                     {minutesLabel(s)}
                   </span>
                 </div>
+                {statText[id] && (
+                  <p className="text-muted-foreground mt-1 pl-11 text-[13px] leading-4">
+                    {statText[id]}
+                  </p>
+                )}
                 <div className="bg-muted mt-1.5 h-1.5 overflow-hidden rounded-full">
                   <span
                     className="bg-primary block h-full rounded-full"

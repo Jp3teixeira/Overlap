@@ -16,15 +16,19 @@ export type TableRow = {
   perGame: number;
   goals: number;
   assists: number;
+  shots: number;
+  recoveries: number;
 };
 
-type SortKey = "games" | "minutes" | "goals" | "assists";
+type SortKey = "games" | "minutes" | "goals" | "assists" | "shots" | "recoveries";
 
 const COLUMNS: { key: SortKey; label: string; title: string; width: string }[] = [
-  { key: "games", label: "J", title: "Jogos", width: "w-9" },
-  { key: "minutes", label: "Min", title: "Minutos", width: "w-12" },
-  { key: "goals", label: "G", title: "Golos", width: "w-9" },
-  { key: "assists", label: "A", title: "Assistências", width: "w-9" },
+  { key: "games", label: "J", title: "Jogos", width: "w-8" },
+  { key: "minutes", label: "Min", title: "Minutos", width: "w-11" },
+  { key: "goals", label: "G", title: "Golos", width: "w-8" },
+  { key: "assists", label: "A", title: "Assistências", width: "w-8" },
+  { key: "shots", label: "R", title: "Remates", width: "w-8" },
+  { key: "recoveries", label: "Rec", title: "Bolas recuperadas", width: "w-9" },
 ];
 
 /** Tabela dos jogadores. Toca no cabeçalho para ordenar (outra vez para inverter). */

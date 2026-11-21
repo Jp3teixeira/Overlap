@@ -181,7 +181,7 @@ function LiveMatchInner({ matchId, opponent, teamName, players, initial }: Props
           <ChevronLeft className="size-5" strokeWidth={2} />
           {opponent}
         </Link>
-        <span className="text-muted-foreground text-[13px] font-medium">Jogo ao vivo</span>
+        <span className="text-muted-foreground text-[13px] font-medium">Registar jogo</span>
       </div>
 
       {state.status === "setup" && (
@@ -189,7 +189,7 @@ function LiveMatchInner({ matchId, opponent, teamName, players, initial }: Props
           state={state}
           dispatch={dispatch}
           players={players}
-          onStart={() => dispatch({ type: "kickoff", now: Date.now() })}
+          onStart={() => dispatch({ type: "kickoff", now: Date.now(), running: false })}
         />
       )}
 

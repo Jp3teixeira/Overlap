@@ -76,8 +76,20 @@ export const liveEventSchema = z.discriminatedUnion("type", [
     // Jogos registados antes das assistências não têm este campo: lê-se como "sem assistência".
     assistId: playerId.nullable().default(null),
   }),
-  z.object({ ...base, type: z.literal("shot"), side, onTarget: z.boolean() }),
-  z.object({ ...base, type: z.enum(STAT_TYPES), side }),
+  // Remates e contagens por jogador (só nossos). Jogos antigos não têm `playerId`: lê-se como "sem jogador".
+  z.object({
+    ...base,
+    type: z.literal("shot"),
+    side,
+    onTarget: z.boolean(),
+    playerId: playerId.nullable().default(null),
+  }),
+  z.object({
+    ...base,
+    type: z.enum(STAT_TYPES),
+    side,
+    playerId: playerId.nullable().default(null),
+  }),
   z.object({
     ...base,
     type: z.literal("sub"),
@@ -184,8 +196,8 @@ export function minutesLabel(seconds: number): string {
 
 export type StatEventInput =
   | { type: "goal"; side: Side; playerId: string | null; assistId?: string | null }
-  | { type: "shot"; side: Side; onTarget: boolean }
-  | { type: StatType; side: Side };
+  | { type: "shot"; side: Side; onTarget: boolean; playerId?: string | null }
+  | { type: StatType; side: Side; playerId?: string | null };
 
 export type LiveAction =
   | { type: "setFormation"; formation: FormationId }
@@ -193,17 +205,27 @@ export type LiveAction =
   | { type: "assign"; slot: number; playerId: string | null }
   | { type: "addBench"; playerId: string }
   | { type: "removeBench"; playerId: string }
-  | { type: "kickoff"; now: number }
+  /** `running: false` começa com o relógio parado (registar a ver o vídeo). */
+  | { type: "kickoff"; now: number; running?: boolean }
   | { type: "pause"; now: number }
+  /** Põe o relógio num minuto (o do vídeo). Com o jogo a andar, continua a contar a partir daí. */
+  | { type: "setClock"; now: number; seconds: number }
   | { type: "resume"; now: number }
   | { type: "endPeriod"; now: number }
   | { type: "startSecondHalf"; now: number }
-  | { type: "finish"; now: number }
+  /** `seconds`: duração final do jogo (por defeito, o relógio). */
+  | { type: "finish"; now: number; seconds?: number }
   | { type: "reopen" }
   | { type: "record"; now: number; id: string; event: StatEventInput }
   | {
       type: "unrecord";
-      event: { type: "goal" | "shot" | StatType; side: Side; onTarget?: boolean };
+      // Sem `playerId`: o último evento desse lado, de quem for. Com `playerId`: o último desse jogador.
+      event: {
+        type: "goal" | "shot" | StatType;
+        side: Side;
+        onTarget?: boolean;
+        playerId?: string | null;
+      };
     }
   | { type: "sub"; now: number; id: string; slot: number; inId: string }
   | { type: "swap"; now: number; id: string; a: number; b: number }
@@ -223,6 +245,8 @@ export type LiveAction =
 
 const LIVE_STATUSES_ACTIVE: LiveStatus[] = ["running", "paused", "halftime"];
 const UNDOABLE = new Set(["goal", "shot", "corner", "foul", "turnover", "recovery", "sub", "swap"]);
+
+const isStatType = (t: string): t is StatType => (STAT_TYPES as readonly string[]).includes(t);
 
 function bump(s: LiveState, patch: Partial<LiveState>): LiveState {
   return { ...s, ...patch, rev: s.rev + 1 };
@@ -280,12 +304,20 @@ export function liveReducer(s: LiveState, a: LiveAction): LiveState {
     case "kickoff":
       if (!isStartable(s)) return s;
       return bump(s, {
-        status: "running",
+        status: a.running === false ? "paused" : "running",
         period: 1,
         starters: [...s.slots],
-        clock: { baseSeconds: 0, startedAt: a.now },
+        clock: { baseSeconds: 0, startedAt: a.running === false ? null : a.now },
         events: [],
       });
+
+    case "setClock": {
+      if (!LIVE_STATUSES_ACTIVE.includes(s.status)) return s;
+      const baseSeconds = Math.min(86_400, Math.max(0, Math.round(a.seconds)));
+      return bump(s, {
+        clock: { baseSeconds, startedAt: s.status === "running" ? a.now : null },
+      });
+    }
 
     case "pause":
       if (s.status !== "running") return s;
@@ -325,7 +357,16 @@ export function liveReducer(s: LiveState, a: LiveAction): LiveState {
 
     case "finish":
       if (!LIVE_STATUSES_ACTIVE.includes(s.status)) return s;
-      return bump(s, { status: "finished", clock: freeze(s, a.now) });
+      return bump(s, {
+        status: "finished",
+        clock:
+          a.seconds === undefined
+            ? freeze(s, a.now)
+            : {
+                baseSeconds: Math.min(86_400, Math.max(0, Math.round(a.seconds))),
+                startedAt: null,
+              },
+      });
 
     case "reopen":
       if (s.status !== "finished") return s;
@@ -349,6 +390,11 @@ export function liveReducer(s: LiveState, a: LiveAction): LiveState {
         );
         event.playerId = clean.playerId;
         event.assistId = clean.assistId;
+      } else if (event.type === "shot" || isStatType(event.type)) {
+        // Só há jogador nos nossos, e tem de ser da convocatória.
+        const counted = event as Extract<LiveEvent, { type: "shot" | StatType }>;
+        const own = counted.side === "us" ? counted.playerId : null;
+        counted.playerId = own && convocados(s).includes(own) ? own : null;
       }
       return bump(s, { events: [...s.events, event] });
     }
@@ -359,6 +405,8 @@ export function liveReducer(s: LiveState, a: LiveAction): LiveState {
         const e = s.events[i];
         if (e.type !== a.event.type || !("side" in e) || e.side !== a.event.side) continue;
         if (e.type === "shot" && a.event.onTarget !== undefined && e.onTarget !== a.event.onTarget)
+          continue;
+        if (a.event.playerId !== undefined && "playerId" in e && e.playerId !== a.event.playerId)
           continue;
         return bump(s, { events: s.events.filter((_, j) => j !== i) });
       }
@@ -507,7 +555,11 @@ export function teamStats(s: LiveState): TeamStats {
     recovery: zero(),
   };
   for (const e of s.events) {
-    if (e.type === "shot") {
+    if (e.type === "goal") {
+      // Um golo é sempre um remate à baliza.
+      out.shots[e.side] += 1;
+      out.onTarget[e.side] += 1;
+    } else if (e.type === "shot") {
       out.shots[e.side] += 1;
       if (e.onTarget) out.onTarget[e.side] += 1;
     } else if (
@@ -531,6 +583,59 @@ export function convocados(s: LiveState): string[] {
   return [...ids];
 }
 
+export type PlayerStatLine = {
+  goals: number;
+  assists: number;
+  /** Remates no total (inclui os à baliza e os golos). */
+  shots: number;
+  /** Remates à baliza (inclui os golos). */
+  onTarget: number;
+  corner: number;
+  foul: number;
+  turnover: number;
+  recovery: number;
+};
+
+export const emptyPlayerLine = (): PlayerStatLine => ({
+  goals: 0,
+  assists: 0,
+  shots: 0,
+  onTarget: 0,
+  corner: 0,
+  foul: 0,
+  turnover: 0,
+  recovery: 0,
+});
+
+/** Estatísticas de cada convocado. Eventos sem jogador só contam na equipa. */
+export function playerStats(s: LiveState): Record<string, PlayerStatLine> {
+  const out: Record<string, PlayerStatLine> = {};
+  for (const id of convocados(s)) out[id] = emptyPlayerLine();
+  for (const e of s.events) {
+    if (e.type === "goal") {
+      const scorer = e.playerId ? out[e.playerId] : undefined;
+      if (scorer) {
+        scorer.goals += 1;
+        scorer.shots += 1;
+        scorer.onTarget += 1;
+      }
+      const assister = e.assistId ? out[e.assistId] : undefined;
+      if (assister) assister.assists += 1;
+    } else if (e.type === "shot") {
+      const line = e.playerId ? out[e.playerId] : undefined;
+      if (line) {
+        line.shots += 1;
+        if (e.onTarget) line.onTarget += 1;
+      }
+    } else if (isStatType(e.type)) {
+      const stat = e as Extract<LiveEvent, { type: StatType }>;
+      const line = stat.playerId ? out[stat.playerId] : undefined;
+      if (line) line[stat.type] += 1;
+    }
+  }
+  return out;
+}
+
 /** Segundos em campo por jogador, a partir dos titulares e das substituições. */
 export function playerSeconds(s: LiveState, nowMs: number): Record<string, number> {
   const totals: Record<string, number> = {};
@@ -540,7 +645,9 @@ export function playerSeconds(s: LiveState, nowMs: number): Record<string, numbe
   const enteredAt = new Map<string, number>();
   for (const id of s.starters) if (id) enteredAt.set(id, 0);
 
-  for (const e of s.events) {
+  // Registar a ver o vídeo pode ser fora de ordem: conta-se pelo minuto, não pela ordem do toque.
+  const subs = s.events.filter((e) => e.type === "sub").sort((x, y) => x.t - y.t);
+  for (const e of subs) {
     if (e.type !== "sub") continue;
     const since = enteredAt.get(e.outId);
     if (since !== undefined) {
@@ -592,6 +699,9 @@ export function referencedPlayerIds(s: LiveState): string[] {
     if (e.type === "swap") {
       ids.add(e.aId);
       ids.add(e.bId);
+    }
+    if ((e.type === "shot" || isStatType(e.type)) && "playerId" in e && e.playerId) {
+      ids.add(e.playerId);
     }
   }
   return [...ids];

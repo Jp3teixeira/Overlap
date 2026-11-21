@@ -135,7 +135,7 @@ export function LiveSetup({
 
       <div className="space-y-2">
         <Button size="lg" className="w-full" disabled={!isStartable(state)} onClick={onStart}>
-          Começar jogo
+          Começar a registar
         </Button>
         {missing > 0 && (
           <p className="text-muted-foreground text-center text-[13px]">

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, Minus, Plus, RotateCcw } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ChevronDown, ChevronRight, Minus, Plus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { SectionTitle } from "@/components/page-header";
 import { ResponsiveSheet } from "@/components/responsive-sheet";
@@ -13,13 +14,15 @@ import {
   goals,
   minutesLabel,
   playerSeconds,
+  playerStats,
   score,
   type GoalItem,
   type LiveAction,
   type LiveState,
   type Side,
 } from "../../live";
-import { LiveStats } from "./live-stats";
+import { ActionGrid, countsOfPlayer, countsOfSide } from "./action-grid";
+import { playerStatText, TeamStatsTable } from "./live-summary";
 import { PlayerPicker } from "./player-picker";
 import { playerName, toPlayerMap, type LivePlayer } from "./types";
 
@@ -60,6 +63,8 @@ export function LiveEdit({
 }) {
   const map = toPlayerMap(players);
   const [dialog, setDialog] = useState<Dialog>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const lines = playerStats(state);
 
   const result = score(state);
   const goalList = goals(state);
@@ -156,15 +161,68 @@ export function LiveEdit({
       </section>
 
       <section>
-        <SectionTitle>Estatísticas da equipa</SectionTitle>
-        <LiveStats
-          state={state}
+        <SectionTitle>Estatísticas por jogador</SectionTitle>
+        <ul className="border-border bg-card divide-border divide-y rounded-lg border">
+          {squad.map((p) => {
+            const open = openId === p.id;
+            const text = playerStatText(lines[p.id]);
+            return (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  aria-expanded={open}
+                  onClick={() => setOpenId(open ? null : p.id)}
+                  className="hover:bg-muted flex min-h-12 w-full items-center gap-3 px-4 py-2 text-left"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[15px] font-medium">{p.name}</span>
+                    <span className="text-muted-foreground block truncate text-[13px]">
+                      {text || "Sem estatísticas"}
+                    </span>
+                  </span>
+                  <ChevronDown
+                    className={cn("text-muted-foreground size-5 shrink-0", open && "rotate-180")}
+                  />
+                </button>
+                {open && (
+                  <div className="border-border border-t p-3">
+                    <ActionGrid
+                      counts={countsOfPlayer(lines[p.id])}
+                      side="us"
+                      playerId={p.id}
+                      dispatch={dispatch}
+                      newId={newId}
+                      hideGoal
+                    />
+                    <p className="text-muted-foreground mt-2 text-[13px]">
+                      Os golos mudam-se na lista de golos, em cima.
+                    </p>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <section>
+        <SectionTitle>{opponent}</SectionTitle>
+        <ActionGrid
+          counts={countsOfSide(state, "them")}
+          side="them"
+          playerId={null}
           dispatch={dispatch}
-          disabled={false}
-          onGoal={() => {}}
           newId={newId}
-          hideGoals
+          hideGoal
         />
+      </section>
+
+      <section>
+        <SectionTitle>Estatísticas da equipa</SectionTitle>
+        <TeamStatsTable live={state} teamName={teamName} opponent={opponent} />
+        <p className="text-muted-foreground mt-2 text-[13px]">
+          A equipa soma o que registas em cada jogador.
+        </p>
       </section>
 
       <section>
