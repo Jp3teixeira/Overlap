@@ -177,6 +177,12 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
   - Entrada pelo botão "Estatísticas" na página Jogos (sem mexer na barra de baixo).
 - [x] **3.9 Trocar jogadores de posição** (jogo ao vivo): tocar em dois jogadores do campo troca-os de lugar (evento `swap`; não mexe nos minutos; "Desfazer" repõe).
 - [x] **3.10 Editar o jogo depois de acabar:** no ecrã "Jogo terminado", "Editar golos, estatísticas e minutos". Golos: mudar marcador/assistência, apagar, acrescentar (com o minuto); contagens da equipa (remates, cantos...) com − e +; minutos por jogador com − e + e "repor". O resultado acompanha os golos e passa para o jogo. Os minutos corrigidos ficam em `live.secondsOverride` (sem migração) e "Reabrir jogo" volta a calculá-los pelas substituições.
+- [x] **3.11 Registar jogo** (substitui o "jogo ao vivo"; mesma rota `/jogos/[id]/ao-vivo`, sem migração): o jogo regista-se a ver o vídeo da câmara.
+  - Relógio parado ao começar, com −5′/−1′/+1′/+5′ para pôr o minuto do vídeo (e "Relógio" para o deixar a andar). Terminar fixa a duração das 2 partes (ou o relógio, se passou disso). Os minutos contam-se pelo minuto de cada substituição, mesmo registadas fora de ordem.
+  - Toca num jogador do campo: botões Golo (pede a assistência), À baliza, Fora, Recuperada, Perdida, Canto e Falta, cada um com contagem e − (os eventos passam a ter `playerId`; jogos antigos sem ele continuam válidos). Substituir/trocar continua a ser tocar no banco/noutro jogador com ele escolhido.
+  - Um golo conta sempre como remate à baliza (também nos jogos antigos). A equipa soma o que se regista por jogador; o adversário tem os mesmos botões, sem jogador.
+  - Resumo e edição: tabela Nós/Eles estilo Flashscore (golos, remates, à baliza, fora, cantos, faltas, perdidas, recuperadas) e, por jogador, o que fez. A edição depois do jogo passa a ter as contagens por jogador.
+  - `/estatisticas`: colunas R (remates) e Rec (recuperadas) por jogador; só contam os jogos registados com jogador.
 
 **Concluído quando:**
 

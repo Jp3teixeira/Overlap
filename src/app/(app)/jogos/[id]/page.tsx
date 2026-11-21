@@ -38,10 +38,10 @@ async function MatchData({ params }: Pick<PageProps<"/jogos/[id]">, "params">) {
     !live || live.status === "setup"
       ? live && live.slots.some(Boolean)
         ? "Continuar convocatória"
-        : "Iniciar jogo ao vivo"
+        : "Registar jogo"
       : live.status === "finished"
-        ? "Abrir jogo ao vivo"
-        : "Voltar ao jogo ao vivo";
+        ? "Abrir registo do jogo"
+        : "Continuar a registar o jogo";
 
   return (
     <>

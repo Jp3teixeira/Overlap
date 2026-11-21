@@ -39,6 +39,8 @@ export function StatsView({
       perGame: minutesPerGame(l),
       goals: l.goals,
       assists: l.assists,
+      shots: l.shots,
+      recoveries: l.recoveries,
     };
   });
 

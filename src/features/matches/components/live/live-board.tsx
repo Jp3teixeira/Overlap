@@ -11,15 +11,17 @@ import {
   formatClock,
   minutesLabel,
   playerSeconds,
+  playerStats,
   score,
   type LiveAction,
   type LiveEvent,
   type LiveState,
   type Side,
 } from "../../live";
+import { ActionGrid, countsOfPlayer, countsOfSide } from "./action-grid";
 import { Bench } from "./bench";
 import { LineupPitch } from "./lineup-pitch";
-import { LiveStats } from "./live-stats";
+import { TeamStatsTable } from "./live-summary";
 import { PlayerPicker } from "./player-picker";
 import { playerName, toPlayerMap, type LivePlayer, type PlayerMap } from "./types";
 
@@ -46,8 +48,12 @@ function describe(e: LiveEvent, map: PlayerMap): string {
         return `Golo de ${playerName(map, e.playerId)}${assist}`;
       }
       return `Golo ${SIDE_LABEL[e.side]}`;
-    case "shot":
-      return `Remate${e.onTarget ? " à baliza" : ""} ${SIDE_LABEL[e.side]}`;
+    case "shot": {
+      const what = `Remate${e.onTarget ? " à baliza" : " fora"}`;
+      return e.playerId
+        ? `${what} de ${playerName(map, e.playerId)}`
+        : `${what} ${SIDE_LABEL[e.side]}`;
+    }
     case "sub":
       return `Entrou ${playerName(map, e.inId)}`;
     case "swap":
@@ -56,7 +62,9 @@ function describe(e: LiveEvent, map: PlayerMap): string {
     case "period_start":
       return "";
     default:
-      return `${STAT_LABEL[e.type]} ${SIDE_LABEL[e.side]}`;
+      return e.playerId
+        ? `${STAT_LABEL[e.type]} de ${playerName(map, e.playerId)}`
+        : `${STAT_LABEL[e.type]} ${SIDE_LABEL[e.side]}`;
   }
 }
 
@@ -86,11 +94,10 @@ export function LiveBoard({
 }) {
   const map = toPlayerMap(players);
   const [selected, setSelected] = useState<Selection>(null);
-  // Golo nosso em 2 passos: marcador e, a seguir, assistência (opcional). `at` é a hora do 1.º toque.
-  const [goalFlow, setGoalFlow] = useState<
-    { at: number; step: "scorer" } | { at: number; step: "assist"; scorerId: string } | null
-  >(null);
+  // Golo nosso: o marcador é o jogador escolhido; falta a assistência (opcional). `at` é a hora do toque.
+  const [goalFlow, setGoalFlow] = useState<{ at: number; scorerId: string } | null>(null);
   const [confirmFinish, setConfirmFinish] = useState(false);
+  const lines = playerStats(state);
 
   useEffect(() => {
     if (!confirmFinish) return;
@@ -143,24 +150,35 @@ export function LiveBoard({
     setSelected(selected?.kind === "bench" && selected.id === id ? null : { kind: "bench", id });
   }
 
-  function onGoal(side: Side) {
-    if (side === "us") {
-      setGoalFlow({ at: timestamp(), step: "scorer" });
-      return;
-    }
+  /** Golo deles regista logo; golo nosso pergunta a assistência (o marcador é o jogador escolhido). */
+  function onTheirGoal() {
     dispatch({
       type: "record",
       now: timestamp(),
       id: newId(),
-      event: { type: "goal", side, playerId: null },
+      event: { type: "goal", side: "them", playerId: null },
     });
     navigator.vibrate?.(15);
   }
 
+  /** Põe o relógio mais `delta` segundos à frente (ou atrás), o minuto do vídeo. */
+  function nudge(delta: number) {
+    const now = timestamp();
+    dispatch({
+      type: "setClock",
+      now,
+      seconds: Math.max(0, elapsedSeconds(state, now) + delta),
+    });
+  }
+
+  /** Terminar fixa o jogo no tempo regulamentar, a não ser que o relógio já tenha passado disso. */
+  const fullTime = state.periodMinutes * 2 * 60;
+
+  const selectedId = selected?.kind === "slot" ? state.slots[selected.slot] : null;
   const onPitch = state.slots.flatMap((id) => players.filter((p) => p.id === id));
 
   /** Regista o golo nosso (a hora é a do 1.º toque, não a de quando acabam de escolher). */
-  function recordGoal(at: number, playerId: string | null, assistId: string | null) {
+  function recordGoal(at: number, playerId: string, assistId: string | null) {
     dispatch({
       type: "record",
       now: at,
@@ -184,21 +202,25 @@ export function LiveBoard({
             {opponent}
           </span>
         </div>
-        <div className="mt-1 flex items-center justify-between gap-2">
+        <div className="mt-1 flex items-center justify-between gap-1">
+          <ClockStep label="−5′" aria="Recuar 5 minutos" onClick={() => nudge(-300)} />
+          <ClockStep label="−1′" aria="Recuar 1 minuto" onClick={() => nudge(-60)} />
           <span
             className={cn(
-              "text-[22px] leading-7 font-[650] [font-stretch:88%] tabular-nums",
+              "min-w-[92px] text-center text-[24px] leading-7 font-[650] [font-stretch:88%] tabular-nums",
               overtime && "text-marker",
             )}
+            aria-label="Minuto do jogo"
           >
             {formatClock(elapsed)}
-            <span className="text-muted-foreground ml-1 text-[13px] font-medium">
-              / {String(periodEnd / 60).padStart(2, "0")}:00
-            </span>
           </span>
+          <ClockStep label="+1′" aria="Avançar 1 minuto" onClick={() => nudge(60)} />
+          <ClockStep label="+5′" aria="Avançar 5 minutos" onClick={() => nudge(300)} />
+        </div>
+        <div className="flex items-center justify-between gap-2">
           <span className="text-muted-foreground text-[13px] font-medium">
-            {periodLabel}
-            {state.status === "paused" && " · Pausa"}
+            {periodLabel} · até {String(periodEnd / 60).padStart(2, "0")}:00
+            {running && " · relógio a andar"}
           </span>
           <SyncBadge sync={sync} onRetry={onRetry} />
         </div>
@@ -208,19 +230,21 @@ export function LiveBoard({
         {running && (
           <Button
             size="lg"
+            variant="outline"
             className="flex-1"
             onClick={() => dispatch({ type: "pause", now: timestamp() })}
           >
-            <Pause /> Pausa
+            <Pause /> Relógio
           </Button>
         )}
         {state.status === "paused" && (
           <Button
             size="lg"
+            variant="outline"
             className="flex-1"
             onClick={() => dispatch({ type: "resume", now: timestamp() })}
           >
-            <Play /> Retomar
+            <Play /> Relógio
           </Button>
         )}
         {state.status === "halftime" && (
@@ -246,11 +270,18 @@ export function LiveBoard({
           variant={confirmFinish ? "destructive" : "outline"}
           onClick={() => {
             if (!confirmFinish) return setConfirmFinish(true);
-            dispatch({ type: "finish", now: timestamp() });
+            const now = timestamp();
+            dispatch({
+              type: "finish",
+              now,
+              seconds: Math.max(elapsedSeconds(state, now), fullTime),
+            });
             toast.success("Jogo terminado.");
           }}
         >
-          {confirmFinish ? "Confirmar: terminar" : "Terminar"}
+          {confirmFinish
+            ? `Confirmar: terminar aos ${Math.round(Math.max(elapsed, fullTime) / 60)}′`
+            : "Terminar"}
         </Button>
       </div>
 
@@ -277,10 +308,32 @@ export function LiveBoard({
           onSlotClick={onSlot}
         />
         <p className="text-muted-foreground mt-2 text-[13px]">
-          Para substituir, toca num jogador do campo e depois num do banco. Para trocar de posição,
-          toca em dois do campo.
+          Toca num jogador para registar o que fez. Para substituir, com ele escolhido toca num do
+          banco; para trocar de posição, toca noutro do campo.
         </p>
       </section>
+
+      {selectedId && (
+        <section aria-label={`Ações de ${playerName(map, selectedId)}`}>
+          <div className="mb-2 flex items-baseline justify-between gap-3">
+            <SectionTitle>{playerName(map, selectedId)}</SectionTitle>
+            <span className="text-muted-foreground text-[13px] tabular-nums">
+              {minutes[selectedId] ?? "0′"} em campo
+            </span>
+          </div>
+          <ActionGrid
+            counts={countsOfPlayer(lines[selectedId])}
+            side="us"
+            playerId={selectedId}
+            dispatch={dispatch}
+            newId={newId}
+            onGoal={() => setGoalFlow({ at: timestamp(), scorerId: selectedId })}
+          />
+          <p className="text-muted-foreground mt-2 text-[13px]">
+            Um golo conta como remate à baliza. O − tira o último.
+          </p>
+        </section>
+      )}
 
       <section>
         <SectionTitle>Banco</SectionTitle>
@@ -293,49 +346,41 @@ export function LiveBoard({
         />
       </section>
 
-      <LiveStats state={state} dispatch={dispatch} disabled={false} onGoal={onGoal} newId={newId} />
+      <section>
+        <SectionTitle>{opponent}</SectionTitle>
+        <ActionGrid
+          counts={countsOfSide(state, "them")}
+          side="them"
+          playerId={null}
+          dispatch={dispatch}
+          newId={newId}
+          onGoal={onTheirGoal}
+        />
+      </section>
+
+      <section>
+        <SectionTitle>Estatísticas</SectionTitle>
+        <TeamStatsTable live={state} teamName={teamName} opponent={opponent} />
+      </section>
 
       <PlayerPicker
-        open={goalFlow?.step === "scorer"}
-        onOpenChange={(open) => {
-          if (!open) setGoalFlow(null);
-        }}
-        title="Quem marcou?"
-        players={onPitch}
-        footer={
-          <Button variant="outline" onClick={() => goalFlow && recordGoal(goalFlow.at, null, null)}>
-            Sem marcador
-          </Button>
-        }
-        onPick={(id) => goalFlow && setGoalFlow({ at: goalFlow.at, step: "assist", scorerId: id })}
-      />
-
-      <PlayerPicker
-        open={goalFlow?.step === "assist"}
+        open={!!goalFlow}
         // Fechar sem escolher não perde o golo: fica sem assistência.
         onOpenChange={(open) => {
-          if (!open && goalFlow?.step === "assist") {
-            recordGoal(goalFlow.at, goalFlow.scorerId, null);
-          }
+          if (!open && goalFlow) recordGoal(goalFlow.at, goalFlow.scorerId, null);
         }}
         title="Quem fez a assistência?"
-        description={
-          goalFlow?.step === "assist" ? `Golo de ${playerName(map, goalFlow.scorerId)}` : undefined
-        }
-        players={onPitch.filter((p) => goalFlow?.step !== "assist" || p.id !== goalFlow.scorerId)}
+        description={goalFlow ? `Golo de ${playerName(map, goalFlow.scorerId)}` : undefined}
+        players={onPitch.filter((p) => p.id !== goalFlow?.scorerId)}
         footer={
           <Button
             variant="outline"
-            onClick={() =>
-              goalFlow?.step === "assist" && recordGoal(goalFlow.at, goalFlow.scorerId, null)
-            }
+            onClick={() => goalFlow && recordGoal(goalFlow.at, goalFlow.scorerId, null)}
           >
             Sem assistência
           </Button>
         }
-        onPick={(id) =>
-          goalFlow?.step === "assist" && recordGoal(goalFlow.at, goalFlow.scorerId, id)
-        }
+        onPick={(id) => goalFlow && recordGoal(goalFlow.at, goalFlow.scorerId, id)}
       />
     </div>
   );
@@ -364,5 +409,19 @@ function SyncBadge({ sync, onRetry }: { sync: SyncState; onRetry: () => void }) 
       )}
       {sync.kind === "saving" ? "A guardar" : "Guardado"}
     </span>
+  );
+}
+
+function ClockStep({ label, aria, onClick }: { label: string; aria: string; onClick: () => void }) {
+  return (
+    <Button
+      type="button"
+      variant="secondary"
+      className="h-11 min-w-[52px] px-2 text-[15px] tabular-nums"
+      aria-label={aria}
+      onClick={onClick}
+    >
+      {label}
+    </Button>
   );
 }

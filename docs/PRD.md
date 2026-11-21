@@ -74,7 +74,7 @@ Sem contas de pais nem jogadores. As contas são criadas à mão no Supabase (n�
 - Próximo treino, próximo jogo, último resultado, 3 atalhos (Observação, Novo treino, Registar jogo). Nada mais.
 
 **Jogo ao vivo e estatísticas** (entrou depois do MVP)
-- Jogo ao vivo: convocatória, campo com os 7, banco, relógio de 2 partes, substituições, golos com marcador e assistência, contagens da equipa (remates, cantos, faltas, bolas perdidas/recuperadas).
+- Registar jogo (a ver o vídeo da câmara, depois do jogo): convocatória, campo com os 7, banco, relógio do vídeo (minuto ajustável), substituições, golos com marcador e assistência, e por jogador: remates (à baliza/fora), cantos, faltas, bolas perdidas e recuperadas. A equipa soma-se sozinha; o adversário tem contadores simples. Estatísticas estilo Flashscore (Nós vs Eles).
 - Estatísticas (`/estatisticas`): resultados da equipa, médias por jogo, marcadores, assistências, jogos e minutos por jogador. Soma os jogos registados ao vivo e os valores de base de cada jogador (o que já se jogou antes da app).
 
 ### Should have

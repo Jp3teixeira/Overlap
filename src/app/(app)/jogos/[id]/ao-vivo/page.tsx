@@ -27,7 +27,7 @@ async function LiveData({ params }: Pick<PageProps<"/jogos/[id]/ao-vivo">, "para
 
   return (
     <>
-      <title>{`Ao vivo · ${match.opponent} · Overlap`}</title>
+      <title>{`Registar · ${match.opponent} · Overlap`}</title>
       <LiveMatch
         matchId={match.id}
         opponent={match.opponent}
