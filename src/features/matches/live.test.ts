@@ -8,6 +8,7 @@ import {
   liveReducer,
   liveSchema,
   minutesLabel,
+  parseClock,
   playerSeconds,
   playerStats,
   referencedPlayerIds,
@@ -681,5 +682,26 @@ describe("registar a ver o vídeo", () => {
       rec("a", { type: "shot", side: "us", onTarget: true, playerId: ids[3] }),
     );
     expect(referencedPlayerIds(s)).toContain(ids[3]);
+  });
+});
+
+describe("parseClock", () => {
+  it("lê mm:ss, mmss e só minutos", () => {
+    expect(parseClock("12:40")).toBe(12 * 60 + 40);
+    expect(parseClock("12.40")).toBe(12 * 60 + 40);
+    expect(parseClock("1240")).toBe(12 * 60 + 40);
+    expect(parseClock("940")).toBe(9 * 60 + 40);
+    expect(parseClock("5:5")).toBe(5 * 60 + 5);
+    expect(parseClock("12")).toBe(12 * 60);
+    expect(parseClock(" 85:00 ")).toBe(85 * 60);
+  });
+
+  it("recusa o que não é um minuto", () => {
+    expect(parseClock("")).toBeNull();
+    expect(parseClock("abc")).toBeNull();
+    expect(parseClock("12:75")).toBeNull();
+    expect(parseClock("1275")).toBeNull();
+    expect(parseClock("-3")).toBeNull();
+    expect(parseClock("12:40:10")).toBeNull();
   });
 });

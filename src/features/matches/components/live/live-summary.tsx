@@ -113,11 +113,14 @@ export function LiveSummary({
   players,
   teamName,
   opponent,
+  wide = false,
 }: {
   live: LiveState;
   players: PlayerMap;
   teamName: string;
   opponent: string;
+  /** No PC e numa página larga: golos e estatísticas de um lado, jogadores do outro. */
+  wide?: boolean;
 }) {
   const lines = playerStats(live);
   const gameSeconds = elapsedSeconds(live, 0);
@@ -137,37 +140,46 @@ export function LiveSummary({
   );
 
   return (
-    <div className="space-y-6">
-      <section>
-        <SectionTitle>Golos</SectionTitle>
-        {goalList.length === 0 ? (
-          <p className="text-muted-foreground text-[15px]">Sem golos registados.</p>
-        ) : (
-          <ul className="border-border bg-card divide-border divide-y rounded-lg border">
-            {goalList.map((g) => (
-              <li key={g.id} className="flex items-center gap-3 px-4 py-2.5 text-[15px]">
-                <span className="text-muted-foreground w-9 tabular-nums">{minutesLabel(g.t)}</span>
-                <span className="font-medium">
-                  {g.side === "us" ? playerName(players, g.playerId) : `Golo do ${opponent}`}
-                </span>
-                {g.side === "us" && !g.playerId && (
-                  <span className="text-muted-foreground">(sem marcador)</span>
-                )}
-                {g.assistId && (
-                  <span className="text-muted-foreground">
-                    · ass. {playerName(players, g.assistId)}
+    <div
+      className={cn(
+        "space-y-6",
+        wide && "lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 lg:space-y-0",
+      )}
+    >
+      <div className="space-y-6">
+        <section>
+          <SectionTitle>Golos</SectionTitle>
+          {goalList.length === 0 ? (
+            <p className="text-muted-foreground text-[15px]">Sem golos registados.</p>
+          ) : (
+            <ul className="border-border bg-card divide-border divide-y rounded-lg border">
+              {goalList.map((g) => (
+                <li key={g.id} className="flex items-center gap-3 px-4 py-2.5 text-[15px]">
+                  <span className="text-muted-foreground w-9 tabular-nums">
+                    {minutesLabel(g.t)}
                   </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                  <span className="font-medium">
+                    {g.side === "us" ? playerName(players, g.playerId) : `Golo do ${opponent}`}
+                  </span>
+                  {g.side === "us" && !g.playerId && (
+                    <span className="text-muted-foreground">(sem marcador)</span>
+                  )}
+                  {g.assistId && (
+                    <span className="text-muted-foreground">
+                      · ass. {playerName(players, g.assistId)}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
-      <section>
-        <SectionTitle>Estatísticas</SectionTitle>
-        <TeamStatsTable live={live} teamName={teamName} opponent={opponent} />
-      </section>
+        <section>
+          <SectionTitle>Estatísticas</SectionTitle>
+          <TeamStatsTable live={live} teamName={teamName} opponent={opponent} />
+        </section>
+      </div>
 
       <section>
         <SectionTitle>Jogadores</SectionTitle>

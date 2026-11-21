@@ -185,12 +185,14 @@ function LiveMatchInner({ matchId, opponent, teamName, players, initial }: Props
       </div>
 
       {state.status === "setup" && (
-        <LiveSetup
-          state={state}
-          dispatch={dispatch}
-          players={players}
-          onStart={() => dispatch({ type: "kickoff", now: Date.now(), running: false })}
-        />
+        <div className="mx-auto max-w-[720px]">
+          <LiveSetup
+            state={state}
+            dispatch={dispatch}
+            players={players}
+            onStart={() => dispatch({ type: "kickoff", now: Date.now(), running: false })}
+          />
+        </div>
       )}
 
       {active && (
@@ -208,20 +210,22 @@ function LiveMatchInner({ matchId, opponent, teamName, players, initial }: Props
       )}
 
       {state.status === "finished" && editing && (
-        <LiveEdit
-          state={state}
-          dispatch={dispatch}
-          players={players}
-          teamName={teamName}
-          opponent={opponent}
-          newId={newId}
-          onDone={() => setEditing(false)}
-        />
+        <div className="mx-auto max-w-[720px]">
+          <LiveEdit
+            state={state}
+            dispatch={dispatch}
+            players={players}
+            teamName={teamName}
+            opponent={opponent}
+            newId={newId}
+            onDone={() => setEditing(false)}
+          />
+        </div>
       )}
 
       {state.status === "finished" && !editing && (
         <div className="space-y-6">
-          <div className="border-border bg-card rounded-lg border px-4 py-4 text-center">
+          <div className="border-border bg-card rounded-lg border px-4 py-4 text-center lg:py-6">
             <p className="text-muted-foreground text-[13px] font-medium">Jogo terminado</p>
             <p className="mt-1 text-[48px] leading-none font-[750] tracking-tight [font-stretch:88%] tabular-nums">
               {result.us}–{result.them}
@@ -239,8 +243,9 @@ function LiveMatchInner({ matchId, opponent, teamName, players, initial }: Props
             players={toPlayerMap(players)}
             teamName={teamName}
             opponent={opponent}
+            wide
           />
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 lg:max-w-xl">
             <Button variant="outline" size="lg" onClick={() => setEditing(true)}>
               Editar golos, estatísticas e minutos
             </Button>

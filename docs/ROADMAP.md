@@ -193,6 +193,10 @@ No fim: lint + typecheck + test + build a passar e o que devo testar à mão.
 
 **Objetivo:** encontrar qualquer exercício em < 10 s, no campo.
 
+- [x] **3.12 Registar jogo no PC** (sem migração): o ecrã de registo usa a largura toda no PC (até 1360 px; o resto da app mantém 720 px) com o campo e o banco à esquerda e, ao lado, as contagens do jogador, as do adversário, as estatísticas e os últimos registos; no telemóvel continua uma coluna.
+  - Golo, À baliza e Fora sempre à vista; Recuperada, Perdida, Canto e Falta ficam em "Mais contagens".
+  - Teclado: 1–7 escolhe o jogador, G/B/F/R/P/C/L contam, ⇧+tecla conta para o adversário, K relógio, Z desfaz, Esc limpa, T vai à caixa "mm:ss" para escrever o minuto do vídeo (`parseClock`: `12:40`, `1240`, `12`).
+  - O resumo do jogo terminado fica em duas colunas no PC.
 - [x] **4.1 Camada de dados de `exercises`** (schemas, labels e testes já feitos) + `labels.ts` das etiquetas + testes.
 - [x] **4.2 `/exercicios`**
   - Pesquisa (nome e descrição, `ilike`) + chips de etiquetas (overlap `&&`), ambos nos search params.

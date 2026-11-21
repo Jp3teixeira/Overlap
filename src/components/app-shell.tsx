@@ -36,7 +36,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </form>
       </aside>
 
-      <main className="mx-auto w-full max-w-[720px] px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+5.5rem)] lg:px-8 lg:pt-10 lg:pb-12">
+      <main className="mx-auto w-full max-w-[720px] px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[calc(env(safe-area-inset-bottom)+5.5rem)] lg:px-8 lg:pt-10 lg:pb-12 has-[[data-wide]]:lg:max-w-[1360px]">
         {children}
       </main>
 

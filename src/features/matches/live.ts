@@ -187,6 +187,31 @@ export function formatClock(seconds: number): string {
   return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
+/**
+ * Lê o minuto do vídeo escrito à mão: "12:40", "12.40", "1240" (12:40), "940" (9:40) ou "12" (12:00).
+ * Devolve segundos, ou null se não fizer sentido.
+ */
+export function parseClock(text: string): number | null {
+  const t = text.trim();
+  let min: number;
+  let sec = 0;
+  let m: RegExpMatchArray | null;
+  if ((m = t.match(/^(\d{1,3})[:.,](\d{1,2})$/))) {
+    min = Number(m[1]);
+    sec = Number(m[2]);
+  } else if ((m = t.match(/^(\d{1,3})(\d{2})$/))) {
+    min = Number(m[1]);
+    sec = Number(m[2]);
+  } else if ((m = t.match(/^(\d{1,2})$/))) {
+    min = Number(m[1]);
+  } else {
+    return null;
+  }
+  if (sec > 59) return null;
+  const total = min * 60 + sec;
+  return total <= 86_400 ? total : null;
+}
+
 /** Minutos arredondados ao mais próximo: "12′". */
 export function minutesLabel(seconds: number): string {
   return `${Math.round(Math.max(0, seconds) / 60)}′`;

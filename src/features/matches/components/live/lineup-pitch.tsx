@@ -19,6 +19,7 @@ export function LineupPitch({
   minutes,
   selectedSlot,
   onSlotClick,
+  showKeys = false,
 }: {
   formation: FormationId;
   slots: (string | null)[];
@@ -27,6 +28,8 @@ export function LineupPitch({
   minutes?: Record<string, string>;
   selectedSlot?: number | null;
   onSlotClick: (slot: number) => void;
+  /** No PC, o número do atalho (1–7) em cada posição. */
+  showKeys?: boolean;
 }) {
   const layout = FORMATION_SLOTS[formation];
   const line = { borderColor: LINE } as const;
@@ -76,6 +79,14 @@ export function LineupPitch({
             className="absolute flex w-[78px] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5 outline-none"
             style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
           >
+            {showKeys && (
+              <kbd
+                aria-hidden
+                className="absolute top-0 left-[8px] z-10 hidden size-5 place-items-center rounded bg-black/75 font-sans text-[11px] font-bold text-white lg:grid"
+              >
+                {i + 1}
+              </kbd>
+            )}
             {player ? (
               <>
                 <LiveAvatar

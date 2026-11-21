@@ -8,9 +8,12 @@ import { getCurrentTeam } from "@/lib/team";
 
 export default function LiveMatchPage({ params }: PageProps<"/jogos/[id]/ao-vivo">) {
   return (
-    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-      <LiveData params={params} />
-    </Suspense>
+    // data-wide: no PC o ecrã de registo usa a largura toda (ver AppShell).
+    <div data-wide>
+      <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+        <LiveData params={params} />
+      </Suspense>
+    </div>
   );
 }
 
